@@ -12,6 +12,7 @@ var progress = require('./routes/calcprogress');
 var wavedata = require('./routes/calcwave');
 var moduledata = require('./routes/calcmodule');
 var personaldata = require('./routes/personaldata');
+var cloudappsdata = require('./routes/getcloudappsdata');
 var issuesDataRouter = require('./routes/issuesDataRouter');
 var http = require('http');
 var path = require('path');
@@ -69,6 +70,7 @@ app.get('/wavedata', wavedata.get);
 app.get('/moduledata', moduledata.get);
 app.get('/personaldata/:fromDate/:toDate', personaldata.get);
 app.get('/issuesdata', issuesDataRouter.get);
+app.get('/cloudappsdata', cloudappsdata.get);
 app.get('/cleandb', function(req, res) {
     ClearDB(function (err) {
         if (err) {

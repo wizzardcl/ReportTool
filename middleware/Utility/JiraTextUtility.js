@@ -15,3 +15,19 @@ exports.getTeamName = function(labels) {
         return "TeamViva";
 };
 
+exports.getCloudAppName = function getCloudAppName(labels) {
+    var indexpp = labels.indexOf("CloudApp_ParentPage");
+    var index = labels.indexOf("CloudApp_");
+    if(indexpp > -1 && indexpp == index) {
+        index = labels.indexOf("CloudApp_", indexpp+1);
+    }
+    if(index < 0) {
+        return "UnknownCloudApp";
+    }
+    var index2 = labels.indexOf(',', index);
+    if(index2 < 0) {
+        index2 = labels.length;
+    }
+
+    return labels.substring(index+9,index2);
+}
