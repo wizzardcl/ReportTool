@@ -17,19 +17,15 @@ exports.getData = function (req, res) {
 function cloudAppData() {
     this.cloudApps = [
         {
-            name: "",
-            pages: [
+            appName: "",
+            pageKey: "",
+            pageName: "",
+            storyPoints: 0,
+            taskStatus: "",
+            blockers: [
                 {
-                    name: "",
-                    storyPoints: 0,
-                    taskStatus: "",
-                    checklistStatus: "",
-                    blockers: [
-                        {
-                            uri: "",
-                            hotLevel: 0
-                        }
-                    ]
+                    uri: "",
+                    hotLevel: 0
                 }
             ]
         }
@@ -40,7 +36,7 @@ function parsePages(callback) {
     var cloudAppsData = new cloudAppData();
     cloudAppsData.cloudApps = [];
 
-    Page.find({}, function (err, pages) {
+    Page.find({}, { worklogHistory: 0, progressHistory: 0 }, function (err, pages) {
         if (err) {
             callback(err);
         }
@@ -52,17 +48,16 @@ function parsePages(callback) {
             var storyPoints = page.storyPoints;
             var pageStatus = page.status;
             // TODO - checklist status and blockers
-            var checklistStatus = "PUT THE STATUS";
             var blockers = [];
 
-            putDataPoint(cloudAppsData, cloudAppName, pageName, storyPoints, pageStatus, checklistStatus, blockers);
+            putDataPoint(cloudAppsData, cloudAppName, pageName, storyPoints, pageStatus, blockers);
         }
 
         callback(err, cloudAppsData);
     })
 }
 
-function putDataPoint(cloudAppsData, appName, pageName, sp, taskStatus, checklistStatus, blockers) {
+function putDataPoint(cloudAppsData, appName, pageName, sp, taskStatus, blockers) {
     var appd = _.find(cloudAppsData.cloudApps, function (cloudApp) {
         return cloudApp.name == appName;
     })
@@ -78,7 +73,7 @@ function putDataPoint(cloudAppsData, appName, pageName, sp, taskStatus, checklis
     });
 
     if (!paged) {
-        paged = { name: pageName, storyPoints: sp, taskStatus: taskStatus, checklistStatus: checklistStatus, blockers: blockers };
+        paged = { name: pageName, storyPoints: sp, taskStatus: taskStatus, blockers: blockers };
         appd.pages.push(paged);
     }
 }
