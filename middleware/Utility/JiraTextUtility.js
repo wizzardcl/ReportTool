@@ -15,7 +15,7 @@ exports.getTeamName = function(labels) {
         return "TeamViva";
 };
 
-exports.getCloudAppName = function getCloudAppName(labels) {
+exports.getCloudAppName = function (labels) {
     var indexpp = labels.indexOf("CloudApp_ParentPage");
     var index = labels.indexOf("CloudApp_");
     if(indexpp > -1 && indexpp == index) {
@@ -30,4 +30,17 @@ exports.getCloudAppName = function getCloudAppName(labels) {
     }
 
     return labels.substring(index+9,index2);
+}
+
+exports.getStreamName = function (labels) {
+    var index = labels.indexOf("Stream");
+    if(index < 0) {
+        return "";
+    }
+    var index2 = labels.indexOf(',', index);
+    if(index2 < 0) {
+        index2 = labels.length;
+    }
+
+    return labels.substring(index+6,index2);
 }
