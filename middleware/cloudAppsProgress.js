@@ -21,6 +21,7 @@ function cloudAppData() {
             pageKey: "",
             pageName: "",
             storyPoints: 0,
+            stream: "",
             taskStatus: "",
             blockers: [
                 {
@@ -36,7 +37,8 @@ function parsePages(callback) {
     var cloudAppsData = new cloudAppData();
     cloudAppsData.cloudApps = [];
 
-    Page.find({}, { worklogHistory: 0, progressHistory: 0 }, function (err, pages) {
+    Page.find({}, { worklogHistory: 0, progressHistory: 0 })
+        .exec(function (err, pages) {
         if (err) {
             callback(err);
         }
@@ -44,36 +46,30 @@ function parsePages(callback) {
         for (var i = 0, pagesLength = pages.length; i < pagesLength; i++) {
             var page = pages[i];
             var cloudAppName = jiraTextUtility.getCloudAppName(page.labels);
+            var pageKey = page.key;
             var pageName = page.summary;
             var storyPoints = page.storyPoints;
+            var streamName = jiraTextUtility.getStreamName(page.labels);
             var pageStatus = page.status;
             // TODO - checklist status and blockers
             var blockers = [];
 
-            putDataPoint(cloudAppsData, cloudAppName, pageName, storyPoints, pageStatus, blockers);
+            putDataPoint(cloudAppsData, cloudAppName, pageKey, pageName, storyPoints, streamName, pageStatus, blockers);
         }
 
         callback(err, cloudAppsData);
     })
 }
 
-function putDataPoint(cloudAppsData, appName, pageName, sp, taskStatus, blockers) {
-    var appd = _.find(cloudAppsData.cloudApps, function (cloudApp) {
-        return cloudApp.name == appName;
-    })
-
-    if (!appd) {
-        appd = { name: appName, pages: [] };
-        cloudAppsData.cloudApps.push(appd);
-    }
-
-    // TODO - think about delete iteration since the page is unique???
-    var paged = _.find(appd.pages, function (page) {
-        return page.name == pageName;
-    });
-
-    if (!paged) {
-        paged = { name: pageName, storyPoints: sp, taskStatus: taskStatus, blockers: blockers };
-        appd.pages.push(paged);
-    }
+function putDataPoint(cloudAppsData, appName, pageKey, pageName, sp, stream, taskStatus, blockers) {
+    var appd = {
+        appName: appName,
+        pageKey: pageKey,
+        pageName: pageName,
+        storyPoints: sp,
+        stream: stream,
+        taskStatus: taskStatus,
+        blockers: blockers
+    };
+    cloudAppsData.cloudApps.push(appd);
 }
