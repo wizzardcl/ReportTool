@@ -6,6 +6,7 @@ var log = require('../libs/log')(module);
 var async = require('async');
 var _ = require('underscore');
 var statusExport = require('../public/jsc/models/statusList');
+var jiraTextUtility = require("./Utility/JiraTextUtility");
 var statusList = new statusExport.statuses();
 
 exports.getData = function (req, res) {
@@ -40,16 +41,8 @@ function moduleData() {
 }
 
 function getTeamName(labels) {
-    var index = labels.indexOf("Team");
-    if(index < 0) {
-        return "";
-    }
-    var index2 = labels.indexOf(',', index);
-    if(index2 < 0) {
-        index2 = labels.length;
-    }
-
-    return labels.substring(index+4,index2);
+    var teamName = jiraTextUtility.getTeamName(labels);
+    return teamName ? teamName.substring(4) : "";
 }
 
 function getDueDateConfirmed(labels) {
