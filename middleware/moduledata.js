@@ -34,6 +34,7 @@ function moduleData() {
                         pagescount: 0,
                         endOfYearDelivery: false,
                         q1Delivery: false,
+                        dueDateConfirmed: false,
                         uri: ""
                     }
                 ];
@@ -42,6 +43,14 @@ function moduleData() {
 function getTeamName(labels) {
     var teamName = jiraTextUtility.getTeamName(labels);
     return teamName ? teamName.substring(4) : "";
+}
+
+function getDueDateConfirmed(labels) {
+    var index = labels.indexOf("DueDateConfirmed");
+    if(index < 0) {
+        return false;
+    }
+    return true;
 }
 
 function getStreamName(labels) {
@@ -96,6 +105,7 @@ function parsePages(callback) {
                             var q1Delivery = module._doc.labels != null ? module._doc.labels.indexOf('Q1Deliverable') > -1 : false;
                             var q2Delivery = module._doc.labels != null ? module._doc.labels.indexOf('Q2Deliverable') > -1 : false;
                             var q2Delivery = q2Delivery || !(endOfYearDelivery || q1Delivery);
+                            var dueDateConfirmed = getDueDateConfirmed(module._doc.labels);
                             var count = 0;
                             Page.find({epicKey: module.key}).exec(function (err, pages) {
                             if(pages != null && pages.length > 0) {
@@ -117,7 +127,7 @@ function parsePages(callback) {
                                         var ignore = status == "Closed" && (resolution == "Out of Scope" || resolution == "Rejected");
 
                                         if(!ignore) {
-                                            putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, ++count, module);
+                                            putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, ++count, module);
                                         }
                                         callback();
                                 },
@@ -126,7 +136,7 @@ function parsePages(callback) {
                                 });
                             }
                             else {
-                                putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, "Empty", "Unknown Module Group", "", "", 0, 0, count, module);
+                                putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, "Empty", "Unknown Module Group", "", "", 0, 0, count, module);
                                 callback();
                             }
                         })
@@ -147,7 +157,7 @@ function parsePages(callback) {
     ]);
 }
 
-function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, count, module) {
+function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, count, module) {
     var initUri = "https://jira.epam.com/jira/issues/?jql=project%20%3D%20PLEX-UXC%20and%20issuetype%3DEpic%20AND%20summary%20~%20'";
 
     //module
@@ -177,6 +187,7 @@ function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, sta
     moduled.endOfYearDelivery = endOfYearDelivery;
     moduled.q1Delivery = q1Delivery;
     moduled.q2Delivery = q2Delivery;
+    moduled.dueDateConfirmed = dueDateConfirmed;
 
 
     var moduleStatus = statusList.getStatusByName(moduled.status);
