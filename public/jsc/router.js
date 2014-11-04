@@ -53,5 +53,8 @@ myApp.config(function($stateProvider, $urlRouterProvider) {
             url: "/page/:id",
             templateUrl: "pages/page.html"
         })
-
+        .state('cloudappBlocker' , {
+            url: "/cloudappBlocker",
+            templateUrl: "pages/cloudappBlocker.html"
+        })
 });

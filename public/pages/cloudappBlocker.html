@@ -1,0 +1,32 @@
+<div id="container" class="container-fluid" ng-controller="cloudAppController">
+    <div class="row">
+        <div class="col-lg-1">
+            <div class="spinner" ng-show="isLoading"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>CloudApp</th>
+                    <th>PageName</th>
+                    <th>StoryPoints</th>
+                    <th>Stream</th>
+                    <th>TaskStatus</th>
+                    <th>Blockers</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps">
+                    <td class="table_cell_border">{{cloudApp.appName}}</td>
+                    <td class="table_cell_border">{{cloudApp.pageName}}</td>
+                    <td class="table_cell_border">{{cloudApp.storyPoints}}</td>
+                    <td class="table_cell_border">{{cloudApp.stream}}</td>
+                    <td class="table_cell_border">{{cloudApp.taskStatus}}</td>
+                    <td class="table_cell_border">{{cloudApp.blockers}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
