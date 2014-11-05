@@ -21,7 +21,8 @@ function Teams() {
                 "Valentina Napolnova",
                 "Aliaksey Rahatka",
                 "Pavel Kastsiuk",
-                "Juliana Stolnik"
+                "Juliana Stolnik",
+                "Artsiom Kazlou"
             ],
             testers: [
                 "Pavel Vysotsky",
@@ -110,6 +111,7 @@ function Teams() {
                 "Dzmitry Isachenka",
                 "Eugen Surovets",
                 "Katsiaryna Tsalabanava",
+                "Kate Tsalabanava",
                 "Vitali Podobed",
                 "Hleb Krotsik",
                 "Uladzimir Vysotski"
