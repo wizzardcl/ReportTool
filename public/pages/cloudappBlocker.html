@@ -3,12 +3,15 @@
         <div class="col-lg-2">
             <label for="teamDD">Team:</label>
             <select id="teamDD" class="form-control headerSelectWidth" ng-model="filteredTeam"
-                    ng-change="onTeamChange()" ng-options="team.id as team.name for team in allTeams"></select>
+                    ng-change="onTeamChange()" ng-options="team.id as team.name for team in teamsOnly"></select>
         </div>
         <div class="col-lg-2">
-            <label for="cloudAppInput">CloudApp:</label>
-            <input id="cloudAppInput" class="form-control headerSelectWidth"  ng-model="search.appName"
-                   ng-change="onCloudAppChange()"/>
+            <label for="moduleSearch">CloudApp:</label>
+            <input id="moduleSearch" class="form-control headerSelectWidth"  ng-model="search.appName"/>
+        </div>
+        <div class="col-lg-2">
+            <label for="cloudAppSearch">CloudApp:</label>
+            <input id="cloudAppSearch" class="form-control headerSelectWidth"  ng-model="search.appName"/>
         </div>
 
         <div class="col-lg-1">
@@ -20,9 +23,16 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th>TeamName</th>
-                    <th>CloudApp</th>
-                    <th>PageName</th>
+                    <th>
+                        <a class="sorted_column" ng-click="predicate='appName'; reverse=!reverse">
+                            <span tooltip-placement="top">CloudApp</span>
+                        </a>
+                    </th>
+                    <th>
+                        <a class="sorted_column" ng-click="predicate='pageName'; reverse=!reverse">
+                            <span tooltip-placement="top">PageName</span>
+                        </a>
+                    </th>
                     <th>StoryPoints</th>
                     <th>Stream</th>
                     <th>TaskStatus</th>
@@ -30,9 +40,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps | filter:search:strict">
-                    <td class="table_cell_border">{{cloudApp.team}}</td>
-                    <td class="table_cell_border">{{cloudApp.appName}}</td>
+                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps | filter:search:strict | orderBy:predicate:reverse">
+                    <td class="table_cell_border" rowspan="{{cloudApp.appName.rowSpan}}">{{cloudApp.appName}}</td>
                     <td class="table_cell_border">{{cloudApp.pageName}}</td>
                     <td class="table_cell_border">{{cloudApp.storyPoints}}</td>
                     <td class="table_cell_border">{{cloudApp.stream}}</td>

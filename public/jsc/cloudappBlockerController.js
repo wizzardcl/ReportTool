@@ -11,9 +11,12 @@ function cloudAppController($scope, $resource, $window, $filter){
         //$scope.common = {};
         $scope.isLoading = true;
         $scope.filteredTeam = 'TeamNova';
+        //$scope.teams = $scope.allTeams(true);
 
         $scope.dataLoad();
     };
+
+    $scope.predicate = 'appName';
 
     $scope.reInit = function () {
         $scope.isLoading = true;
@@ -49,11 +52,6 @@ function cloudAppController($scope, $resource, $window, $filter){
     $scope.onTeamChange = function()
     {
         $scope.reInit();
-    };
-
-    $scope.onCloudAppChange = function()
-    {
-        //$scope.reInit();
     };
 
     $scope.init();

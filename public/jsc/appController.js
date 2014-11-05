@@ -30,8 +30,16 @@ function appController($scope, $resource, $window) {
 
     $scope.allTeams = function () {
         var allTeamsArray = [{"id": "All", "name": "All"}];
+
         allTeamsArray.push.apply(allTeamsArray,$scope.TeamDevMembers.teams);
         return allTeamsArray;
+    }();
+
+    $scope.teamsOnly = function () {
+        var teamsOnlyArray = [];
+
+        teamsOnlyArray.push.apply(teamsOnlyArray,$scope.TeamDevMembers.teams);
+        return teamsOnlyArray;
     }();
 
     $scope.allSMEs = [{id: "All", name: "All"}];
