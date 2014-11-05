@@ -1,5 +1,16 @@
 <div id="container" class="container-fluid" ng-controller="cloudAppController">
     <div class="row">
+        <div class="col-lg-2">
+            <label for="teamDD">Team:</label>
+            <select id="teamDD" class="form-control headerSelectWidth" ng-model="filteredTeam"
+                    ng-change="onTeamChange()" ng-options="team.id as team.name for team in allTeams"></select>
+        </div>
+        <div class="col-lg-2">
+            <label for="cloudAppInput">CloudApp:</label>
+            <input id="cloudAppInput" class="form-control headerSelectWidth"  ng-model="search.appName"
+                   ng-change="onCloudAppChange()"/>
+        </div>
+
         <div class="col-lg-1">
             <div class="spinner" ng-show="isLoading"></div>
         </div>
@@ -9,6 +20,7 @@
         <table class="table">
             <thead>
                 <tr>
+                    <th>TeamName</th>
                     <th>CloudApp</th>
                     <th>PageName</th>
                     <th>StoryPoints</th>
@@ -18,7 +30,8 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps">
+                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps | filter:search:strict">
+                    <td class="table_cell_border">{{cloudApp.team}}</td>
                     <td class="table_cell_border">{{cloudApp.appName}}</td>
                     <td class="table_cell_border">{{cloudApp.pageName}}</td>
                     <td class="table_cell_border">{{cloudApp.storyPoints}}</td>

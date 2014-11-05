@@ -2,15 +2,21 @@
  * Created by Edhar_Liashok on 10/15/2014.
  */
 
-function cloudAppController($scope, $resource, $window){
-    var cloudAppDataResource = $resource('/cloudappsdata');
+function cloudAppController($scope, $resource, $window, $filter){
+    var cloudAppDataResource = $resource('/cloudappsdata?team=:team', {team: "@filteredTeam", cloudApp: "@cloudAppInput"});
 
     /* ------------------------------------------------------ Init/Reinit -------------------------------*/
 
     $scope.init = function () {
-        $scope.common = {};
+        //$scope.common = {};
         $scope.isLoading = true;
+        $scope.filteredTeam = 'TeamNova';
 
+        $scope.dataLoad();
+    };
+
+    $scope.reInit = function () {
+        $scope.isLoading = true;
         $scope.dataLoad();
     };
 
@@ -34,8 +40,20 @@ function cloudAppController($scope, $resource, $window){
             loadingDfrd.reject(err);
         };
 
-        cloudAppDataResource.get(getTimeSheetSuccess, getTimeSheetFail);
+        cloudAppDataResource.get({team: $scope.filteredTeam, cloudApp: $scope.cloudAppInput},getTimeSheetSuccess, getTimeSheetFail);
         return loadingDfrd.promise();
+    };
+
+    /* ------------------------------------------- DOM/Angular events --------------------------------------*/
+
+    $scope.onTeamChange = function()
+    {
+        $scope.reInit();
+    };
+
+    $scope.onCloudAppChange = function()
+    {
+        //$scope.reInit();
     };
 
     $scope.init();

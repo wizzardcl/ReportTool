@@ -11,6 +11,9 @@ exports.getData = function (req, res) {
     var teamName = req.query.team;
     var cloudAppName = req.query.cloudApp;
 
+    //var teamName = req.params.team;
+    //var cloudAppName = req.params.cloudApp;
+
     parsePages(teamName, cloudAppName, function (err, cloudAppData) {
         if (err) {
             throw err;
