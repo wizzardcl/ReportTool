@@ -44,3 +44,16 @@ exports.getStreamName = function (labels) {
 
     return labels.substring(index+6,index2);
 }
+
+exports.getModuleName = function (labels) {
+    var index = labels.indexOf("PageModule_");
+    if(index < 0) {
+        return "UnknownModule";
+    }
+    var index2 = labels.indexOf(',', index);
+    if(index2 < 0) {
+        index2 = labels.length;
+    }
+
+    return labels.substring(index+11,index2);
+}

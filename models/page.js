@@ -35,7 +35,8 @@ var schema = new Schema({
         issue: {type: Schema.Types.ObjectId, ref: 'Issue'}
     }],
     created:                { type: String },
-    updated:                { type: String }
+    updated:                { type: String },
+    checklistStatus:        { type: String }
 });
 
 exports.Page = mongoose.model('Page', schema);
