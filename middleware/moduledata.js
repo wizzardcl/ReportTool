@@ -83,6 +83,23 @@ function getModuleGroupName(labels) {
     return groupName;
 }
 
+function getSizeName(labels) {
+    var sizeName = "Unknown";
+    var index = labels.indexOf("PageSize");
+    if(index < 0) {
+        return sizeName;
+    }
+    var index2 = labels.indexOf(',', index);
+    if(index2 < 0) {
+        index2 = labels.length;
+    }
+
+    if(labels.substring(index+8,index2) != "") {
+        sizeName = labels.substring(index+8,index2);
+    }
+    return sizeName;
+}
+
 function SortData(moduledata) {
     moduledata.module.sort(function (a, b) {
         a = a.name;
@@ -95,6 +112,7 @@ function parsePages(callback) {
     var moduledata = new moduleData();
     moduledata.module = [];
 
+    var pageByMonthArray = [[],[],[],[],[],[],[],[],[],[],[],[]];
 
     async.series([
         function (callback) {
@@ -107,18 +125,33 @@ function parsePages(callback) {
                             var q2Delivery = q2Delivery || !(endOfYearDelivery || q1Delivery);
                             var dueDateConfirmed = getDueDateConfirmed(module._doc.labels);
                             var count = 0;
+                            var labels = module._doc.labels != null ? module._doc.labels : "";
+                            var teamName = getTeamName(labels);
+                            var streamName = getStreamName(labels);
+
                             Page.find({epicKey: module.key}).exec(function (err, pages) {
                             if(pages != null && pages.length > 0) {
                                 async.eachSeries(pages, function(page, callback) {
                                         var storyPoints = page.storyPoints == null ? 0 : parseFloat(page.storyPoints);
+
+                                        if(page.devFinished != null) {
+                                            var dfDate = new Date(Date.parse(page.devFinished));
+                                            var dfMonth = dfDate.getMonth();
+                                            var sizeName = getSizeName(page.labels);
+                                            var monthItems = pageByMonthArray[dfMonth];
+                                            if(monthItems[sizeName] != null) {
+                                                monthItems[sizeName]++;
+                                            }
+                                            else {
+                                                monthItems[sizeName] = 1;
+                                            }
+                                        }
 
                                         //if(page.epicKey == 'PLEXUXC-2056') {
                                         //    log.info(page.key + ', ' + page.status + ', ' + page.resolution);
                                         //}
 
                                         var moduleGroup = getModuleGroupName(page.labels);
-                                        var teamName = getTeamName(page.labels);
-                                        var streamName = getStreamName(page.labels);
 
                                         var calcStoryPoints = storyPoints * page.progress / 100;
 
@@ -140,7 +173,7 @@ function parsePages(callback) {
                                 });
                             }
                             else {
-                                putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, "Empty", "Unknown Module Group", "", "", 0, 0, count, module);
+                                putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, "Empty", "Unknown Module Group", teamName, streamName, 0, 0, count, module);
                                 callback();
                             }
                         })
@@ -162,7 +195,7 @@ function parsePages(callback) {
 }
 
 function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, count, module) {
-    var initUri = "https://jira.epam.com/jira/issues/?jql=project%20%3D%20PLEX-UXC%20and%20issuetype%3DEpic%20AND%20summary%20~%20'";
+    var initUri = "https://jira.epam.com/jira/browse/";
 
     //module
     var moduled;
@@ -177,14 +210,16 @@ function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, due
             name: module.summary, duedate: module.duedate, smename: module.assignee,
             teamnames: [], key: module.key,
             accepted: status == "Accepted", status: status,
-            modulestatus: module.status, moduleresolution: module.resolution };
+            modulestatus: module.status, moduleresolution: module.resolution,
+            fixVersions: module.fixVersions
+        };
         moduledata.module.push(moduled);
     }
 
     moduled.reportedSP += calcStoryPoints;
     moduled.summarySP += storyPoints;
     moduled.progress = moduled.reportedSP*100/moduled.summarySP;
-    moduled.uri = initUri + module.summary + "'";
+    moduled.uri = initUri + module.key;
     moduled.moduleGroup = moduleGroup;
     moduled.accepted = moduled.accepted ? status == "Accepted" : false;
     moduled.pagescount = count;
