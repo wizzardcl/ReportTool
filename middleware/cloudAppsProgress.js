@@ -88,7 +88,9 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
                                     key: pageIssue.key,
                                     uri: pageIssue.uri,
                                     status: pageIssue.status,
-                                    pagesInvolved: pageIssue.pages.length
+                                    pagesInvolved: pageIssue.pages.length,
+                                    type: pageIssue.type,
+                                    isF5Issue: pageIssue.labels.indexOf("F5") > -1
                                 })
                             }
 
