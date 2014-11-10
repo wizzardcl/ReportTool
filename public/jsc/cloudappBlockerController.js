@@ -16,7 +16,7 @@ function cloudAppController($scope, $resource, $window, $filter){
         $scope.dataLoad();
     };
 
-    $scope.predicate = 'appName';
+    $scope.predicate = 'moduleName';
 
     $scope.reInit = function () {
         $scope.isLoading = true;
@@ -52,6 +52,38 @@ function cloudAppController($scope, $resource, $window, $filter){
     $scope.onTeamChange = function()
     {
         $scope.reInit();
+    };
+
+    $scope.previousModule = '';
+    $scope.previousModuleSkipped = false;
+
+    $scope.showModule = function(module){
+
+        if(module == $scope.previousModule){
+            $scope.previousModuleSkipped = true;
+            return false;
+        }
+
+        $scope.previousModule = module;
+        $scope.previousModuleSkipped = false;
+
+        return true;
+    };
+
+    $scope.previousCloud = '';
+    $scope.previousCloudSkipped = false;
+
+    $scope.showCloud = function(cloud){
+
+        if(cloud == $scope.previousCloud){
+            $scope.previousCloudSkipped = true;
+            return false;
+        }
+
+        $scope.previousCloud = cloud;
+        $scope.previousCloudSkipped = false;
+
+        return true;
     };
 
     $scope.init();

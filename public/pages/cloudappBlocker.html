@@ -6,8 +6,8 @@
                     ng-change="onTeamChange()" ng-options="team.id as team.name for team in teamsOnly"></select>
         </div>
         <div class="col-lg-2">
-            <label for="moduleSearch">CloudApp:</label>
-            <input id="moduleSearch" class="form-control headerSelectWidth"  ng-model="search.appName"/>
+            <label for="moduleSearch">Module:</label>
+            <input id="moduleSearch" class="form-control headerSelectWidth"  ng-model="search.moduleName"/>
         </div>
         <div class="col-lg-2">
             <label for="cloudAppSearch">CloudApp:</label>
@@ -24,14 +24,22 @@
             <thead>
                 <tr>
                     <th>
-                        <a class="sorted_column" ng-click="predicate='appName'; reverse=!reverse">
-                            <span tooltip-placement="top">CloudApp</span>
-                        </a>
+                        <span tooltip-placement="top">Module</span>
+                        <!--<a class="sorted_column" ng-click="predicate='moduleName'; reverse=!reverse">
+                            <span tooltip-placement="top">Module</span>
+                        </a>-->
                     </th>
                     <th>
-                        <a class="sorted_column" ng-click="predicate='pageName'; reverse=!reverse">
-                            <span tooltip-placement="top">PageName</span>
-                        </a>
+                        <span tooltip-placement="top">CloudApp</span>
+                        <!--<a class="sorted_column" ng-click="predicate='appName'; reverse=!reverse">
+                            <span tooltip-placement="top">CloudApp</span>
+                        </a>-->
+                    </th>
+                    <th>
+                        <span tooltip-placement="top">Page</span>
+                        <!--<a class="sorted_column" ng-click="predicate='pageName'; reverse=!reverse">
+                            <span tooltip-placement="top">Page</span>
+                        </a>-->
                     </th>
                     <th>StoryPoints</th>
                     <th>Stream</th>
@@ -40,13 +48,30 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps | filter:search:strict | orderBy:predicate:reverse">
-                    <td class="table_cell_border" rowspan="{{cloudApp.appName.rowSpan}}">{{cloudApp.appName}}</td>
+                <tr ng-repeat = "cloudApp in cloudAddData.cloudApps | filter:search:strict | orderBy:['moduleName','appName','pageName']:reverse">
+                    <td class="table_cell_border" ng-if="showModule(cloudApp.moduleName)">{{cloudApp.moduleName}}</td>
+                    <td class="" ng-if="previousModuleSkipped"></td>
+                    <td class="table_cell_border" ng-if="showCloud(cloudApp.appName)">{{cloudApp.appName}}</td>
+                    <td class="" ng-if="previousCloudSkipped"></td>
                     <td class="table_cell_border">{{cloudApp.pageName}}</td>
                     <td class="table_cell_border">{{cloudApp.storyPoints}}</td>
                     <td class="table_cell_border">{{cloudApp.stream}}</td>
                     <td class="table_cell_border">{{cloudApp.taskStatus}}</td>
-                    <td class="table_cell_border">{{cloudApp.blockers}}</td>
+                    <td class="table_cell_border">
+                        <div>
+                            <span ng-repeat="blocker in cloudApp.blockers" >
+                                <a class="blocker_style blocker_status_{{blocker.status}}"
+                                    ng-class="{
+                                    'blocker_warning_0' : blocker.pagesInvolved == 1 && blocker.status != 'Closed',
+                                    'blocker_warning_1' : blocker.pagesInvolved == 2 && blocker.status != 'Closed',
+                                    'blocker_warning_2' : blocker.pagesInvolved >= 3 && blocker.status != 'Closed'
+                                    }"
+                                    href="{{blocker.uri}}">
+                                    {{blocker.key}}
+                                </a>
+                            </span>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>

@@ -206,3 +206,42 @@ tr th:last-child {
     border-color: #0028c1 !important;
     border-width: 1px !important;
 }
+
+.blocker_style
+{
+    -moz-user-select: none;
+    background-clip: padding-box;
+    background-color: #e4e4e4;
+    /*background-image: linear-gradient(to top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);*/
+    border: 1px solid #aaaaaa;
+    border-radius: 3px;
+    box-shadow: 0 0 2px #fff inset, 0 1px 0 rgba(0, 0, 0, 0.05);
+    color: black;
+    line-height: 13px;
+    margin: 3px 0 3px 5px;
+    padding: 3px 5px 3px 5px;
+    position: relative;
+    display: inline-block;
+}
+
+.blocker_status_Closed
+{
+    text-decoration: line-through;
+    background-image: linear-gradient(to top, #ccc 10%, #fff 100%);
+}
+
+.blocker_warning_0
+{
+    background-image: linear-gradient(to top, green 5%, yellow 100%);
+
+}
+
+.blocker_warning_1
+{
+    background-image: linear-gradient(to top, orange 5%, yellow 100%);
+}
+
+.blocker_warning_2
+{
+    background-image: linear-gradient(to top, red 5%, yellow 100%);
+}
