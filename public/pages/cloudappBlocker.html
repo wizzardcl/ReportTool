@@ -58,19 +58,17 @@
                     <td class="table_cell_border">{{cloudApp.stream}}</td>
                     <td class="table_cell_border">{{cloudApp.taskStatus}}</td>
                     <td class="table_cell_border">
-                        <div>
-                            <span ng-repeat="blocker in cloudApp.blockers" >
-                                <a class="blocker_style blocker_status_{{blocker.status}}"
-                                    ng-class="{
-                                    'blocker_warning_0' : blocker.pagesInvolved == 1 && blocker.status != 'Closed',
-                                    'blocker_warning_1' : blocker.pagesInvolved == 2 && blocker.status != 'Closed',
-                                    'blocker_warning_2' : blocker.pagesInvolved >= 3 && blocker.status != 'Closed'
-                                    }"
-                                    href="{{blocker.uri}}">
-                                    {{blocker.key}}
-                                </a>
-                            </span>
-                        </div>
+                        <span ng-repeat="blocker in cloudApp.blockers" >
+                            <a class="blocker_style blocker_status_{{blocker.status}}"
+                                ng-class="{
+                                'blocker_warning_0' : blocker.pagesInvolved == 1 && blocker.status != 'Closed',
+                                'blocker_warning_1' : blocker.pagesInvolved == 2 && blocker.status != 'Closed',
+                                'blocker_warning_2' : blocker.pagesInvolved >= 3 && blocker.status != 'Closed'
+                                }"
+                                href="{{blocker.uri}}">
+                                {{blocker.key}}
+                            </a>
+                        </span>
                     </td>
                 </tr>
             </tbody>
