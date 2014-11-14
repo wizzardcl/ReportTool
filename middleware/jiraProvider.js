@@ -96,6 +96,11 @@ exports.updateJiraInfo = function (full, jiraUser, jiraPassword, callback) {
 //            response.end();
             updateInProgress = false;
             callback();
+        },
+        //step 6
+        function (callback) {
+            LogProgress("**** Update Finished ****");
+            callback();
         }
     ],
     //optional callback
@@ -159,6 +164,9 @@ function Step1CollectModules(jira, callback) {
                         }
                         callback(err);
                     });
+            }
+            else {
+                callback();
             }
         });
     },
@@ -461,7 +469,7 @@ function SavePage(jira, issue, callback) {
 }
 
 function ParseProgress(item, page, author, created) {
-    if (item.fieldtype == 'custom' && item.field == 'Progress') {
+    if (item.fieldtype == 'custom' && (item.field == 'Progress' || item.field == "Progress, %")) {
         var from = item.fromString == null ||
             item.fromString == undefined ||
             item.fromString == ''

@@ -35,7 +35,8 @@ function moduleData() {
                         endOfYearDelivery: false,
                         q1Delivery: false,
                         dueDateConfirmed: false,
-                        uri: ""
+                        uri: "",
+                        blocked: false
                     }
                 ];
 }
@@ -112,20 +113,14 @@ function parsePages(callback) {
     var moduledata = new moduleData();
     moduledata.module = [];
 
-    var pageByMonthArray = [[],[],[],[],[],[],[],[],[],[],[],[]];
-
     async.series([
         function (callback) {
             Module.find({}).exec(function(err, modules) {
                 async.series([
                     async.eachSeries(modules, function(module, callback) {
-                            var endOfYearDelivery = module._doc.labels != null ? module._doc.labels.indexOf('EOYDeliverable') > -1 : false;
-                            var q1Delivery = module._doc.labels != null ? module._doc.labels.indexOf('Q1Deliverable') > -1 : false;
-                            var q2Delivery = module._doc.labels != null ? module._doc.labels.indexOf('Q2Deliverable') > -1 : false;
-                            var q2Delivery = q2Delivery || !(endOfYearDelivery || q1Delivery);
-                            var dueDateConfirmed = getDueDateConfirmed(module._doc.labels);
-                            var count = 0;
                             var labels = module._doc.labels != null ? module._doc.labels : "";
+                            var dueDateConfirmed = getDueDateConfirmed(labels);
+                            var count = 0;
                             var teamName = getTeamName(labels);
                             var streamName = getStreamName(labels);
 
@@ -133,27 +128,10 @@ function parsePages(callback) {
                             if(pages != null && pages.length > 0) {
                                 async.eachSeries(pages, function(page, callback) {
                                         var storyPoints = page.storyPoints == null ? 0 : parseFloat(page.storyPoints);
-
-                                        if(page.devFinished != null) {
-                                            var dfDate = new Date(Date.parse(page.devFinished));
-                                            var dfMonth = dfDate.getMonth();
-                                            var sizeName = getSizeName(page.labels);
-                                            var monthItems = pageByMonthArray[dfMonth];
-                                            if(monthItems[sizeName] != null) {
-                                                monthItems[sizeName]++;
-                                            }
-                                            else {
-                                                monthItems[sizeName] = 1;
-                                            }
-                                        }
-
-                                        //if(page.epicKey == 'PLEXUXC-2056') {
-                                        //    log.info(page.key + ', ' + page.status + ', ' + page.resolution);
-                                        //}
-
                                         var moduleGroup = getModuleGroupName(page.labels);
+                                        var progress = page.progress == null ? 0 : parseInt(page.progress);
 
-                                        var calcStoryPoints = storyPoints * page.progress / 100;
+                                        var calcStoryPoints = storyPoints * progress / 100;
 
                                         var status = page.status;
                                         var resolution = page.resolution;
@@ -162,9 +140,10 @@ function parsePages(callback) {
                                         status = status == 'Closed' && resolution == "Implemented" ? "Accepted" : status;
 
                                         var ignore = status == "Closed" && (resolution == "Out of Scope" || resolution == "Rejected" || resolution == "Canceled");
+                                        var blocked = status == "Blocked";
 
                                         if(!ignore) {
-                                            putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, ++count, module);
+                                            putDataPoint(moduledata, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, ++count, module, blocked);
                                         }
                                         callback();
                                 },
@@ -173,7 +152,7 @@ function parsePages(callback) {
                                 });
                             }
                             else {
-                                putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, "Empty", "Unknown Module Group", teamName, streamName, 0, 0, count, module);
+                                putDataPoint(moduledata, dueDateConfirmed, "Empty", "Unknown Module Group", teamName, streamName, 0, 0, count, module);
                                 callback();
                             }
                         })
@@ -194,7 +173,7 @@ function parsePages(callback) {
     ]);
 }
 
-function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, count, module) {
+function putDataPoint(moduledata, dueDateConfirmed, status, moduleGroup, teamName, streamName, calcStoryPoints, storyPoints, count, module, blocked) {
     var initUri = "https://jira.epam.com/jira/browse/";
 
     //module
@@ -211,7 +190,7 @@ function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, due
             teamnames: [], key: module.key,
             accepted: status == "Accepted", status: status,
             modulestatus: module.status, moduleresolution: module.resolution,
-            fixVersions: module.fixVersions
+            fixVersions: module.fixVersions, blocked: blocked
         };
         moduledata.module.push(moduled);
     }
@@ -223,10 +202,8 @@ function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, due
     moduled.moduleGroup = moduleGroup;
     moduled.accepted = moduled.accepted ? status == "Accepted" : false;
     moduled.pagescount = count;
-    moduled.endOfYearDelivery = endOfYearDelivery;
-    moduled.q1Delivery = q1Delivery;
-    moduled.q2Delivery = q2Delivery;
     moduled.dueDateConfirmed = dueDateConfirmed;
+    moduled.blocked |= blocked;
 
 
     var moduleStatus = statusList.getStatusByName(moduled.status);
@@ -243,14 +220,14 @@ function putDataPoint(moduledata, endOfYearDelivery, q1Delivery, q2Delivery, due
 
 function putTeamName(teamName, moduled) {
     if (teamName != "") {
-        var foundt = false;
+        var found = false;
         _.each(moduled.teamnames, function (teamname) {
             if (teamname == teamName) {
-                foundt = true;
+                found = true;
             }
         });
 
-        if (!foundt) {
+        if (!found) {
             moduled.teamnames.push(teamName);
         }
     }

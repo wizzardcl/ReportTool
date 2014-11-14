@@ -6,9 +6,6 @@ function moduleProgressController($scope, $resource, $window, $filter) {
         $scope.common = {};
         $scope.dataLoad();
         $scope.sortByDate = false;
-        $scope.filterEod = false;
-        $scope.filterQ1 = false;
-        $scope.filterQ2 = false;
         $scope.showTeamTable = false;
         $scope.showStreams = false;
         $scope.showModules = false;
@@ -37,7 +34,7 @@ function moduleProgressController($scope, $resource, $window, $filter) {
         $scope.total.total = 0;
         $scope.allSMEs = [{id: "All", name: "All"}];
         $scope.allModuleGroups = [{id: "All", name: "All"}];
-        $scope.allVersions = [{id: "All", name: "All"}];
+        $scope.allVersions = [{id: "All", name: "All"}, {id: "Q1", name: "Q1"}, {id: "Q2", name: "Q2"}];
         $scope.showVersions = [];
         $scope.teamLoadData = [];
     };
@@ -46,14 +43,15 @@ function moduleProgressController($scope, $resource, $window, $filter) {
         //fill in Versions combo
         _.each($scope.moduleProgressData.module, function (module) {
             var found = false;
+            var versionProcessed = module.fixVersions == "" ? "Undefined" : module.fixVersions;
             _.each($scope.allVersions, function (version) {
-                if (version.name == module.fixVersions) {
+                if (version.name == versionProcessed) {
                     found = true;
                 }
             });
             if (!found) {
-                $scope.allVersions.push({id: module.fixVersions, name: module.fixVersions});
-                $scope.showVersions.push(module.fixVersions);
+                $scope.allVersions.push({id: versionProcessed, name: versionProcessed});
+                $scope.showVersions.push(versionProcessed);
             }
         });
     }
@@ -131,6 +129,9 @@ function moduleProgressController($scope, $resource, $window, $filter) {
         $scope.total.summSP = 0;
         $scope.updatedModuleProgressData=[];
         $scope.teamLoadData = [];
+        if($scope.moduleProgressData == undefined) {
+            return;
+        }
         FillVersionsCombo();
         FillGroupsCombo();
         FillSmeCombo();
@@ -139,8 +140,31 @@ function moduleProgressController($scope, $resource, $window, $filter) {
             if($scope.filteredMG != $scope.allModuleGroups[0].id && moduleProgressItem.moduleGroup != $scope.filteredMG){
                 return;
             }
-            if($scope.filteredVersion != $scope.allVersions[0].id && moduleProgressItem.fixVersions != $scope.filteredVersion){
-                return;
+            if($scope.filteredVersion != $scope.allVersions[0].id) {
+                if($scope.filteredVersion == "Q1") {
+                    if(!(moduleProgressItem.fixVersions == "2.0 January 2015" ||
+                        moduleProgressItem.fixVersions == "3.0 February 2015" ||
+                        moduleProgressItem.fixVersions == "4.0 March 2015"
+                    )) {
+                        return;
+                    }
+                }
+                else if($scope.filteredVersion == "Q2") {
+                    if(!(moduleProgressItem.fixVersions == "5.0 April 2015" ||
+                        moduleProgressItem.fixVersions == "6.0 May 2015" ||
+                        moduleProgressItem.fixVersions == "7.0 June 2015"
+                        )) {
+                        return;
+                    }
+                }
+                else if($scope.filteredVersion == "Undefined"){
+                    if(moduleProgressItem.fixVersions != "") {
+                        return;
+                    }
+                }
+                else if (moduleProgressItem.fixVersions != $scope.filteredVersion) {
+                    return;
+                }
             }
             if($scope.filteredSme != $scope.allSMEs[0].id && moduleProgressItem.smename != $scope.filteredSme){
                 return;
@@ -155,15 +179,6 @@ function moduleProgressController($scope, $resource, $window, $filter) {
                 if(!found) {
                     return;
                 }
-            }
-            if($scope.filterEod && !moduleProgressItem.endOfYearDelivery) {
-                return;
-            }
-            if($scope.filterQ1 && !moduleProgressItem.q1Delivery) {
-                return;
-            }
-            if($scope.filterQ2 && !moduleProgressItem.q2Delivery) {
-                return;
             }
 
             moduleProgressItem.progress = Math.round(moduleProgressItem.progress);
@@ -250,24 +265,29 @@ function moduleProgressController($scope, $resource, $window, $filter) {
                 if (version.name == moduleProgressItem.fixVersions) {
                     version.done += moduleProgressItem.reportedSP;
                     version.total += moduleProgressItem.summarySP;
-                    version.restSP = Math.floor(version.total - version.done);
+                    version.restSP = version.total - version.done;
                     var moduleName = $scope.showModules ? getCleanModuleName(moduleProgressItem.name) : moduleProgressItem.smename;
-                    var reportedSP = Math.floor(moduleProgressItem.reportedSP);
-                    var summarySP = Math.floor(moduleProgressItem.summarySP);
-                    fillSmeNames(version.smeNames, moduleName, reportedSP, summarySP, status);
+                    var reportedSP = moduleProgressItem.reportedSP;
+                    var summarySP = moduleProgressItem.summarySP;
+                    fillSmeNames(teamobj, version, moduleName, reportedSP, summarySP, status, moduleProgressItem);
                 }
             }
         }
     }
 
-    function fillSmeNames(smeNames, name, reportedSP, summarySP, status) {
+    function fillSmeNames(teamobj, version, name, reportedSP, summarySP, status, item) {
         var found = false;
-        for(var i=0; i<smeNames.length; i++) {
-            var card = smeNames[i];
+        for(var i=0; i<version.smeNames.length; i++) {
+            var card = version.smeNames[i];
             if(card.name == name) {
                 card.reportedSP += reportedSP;
                 card.summarySP += summarySP;
                 card.restSP = card.summarySP - card.reportedSP;
+                var initUri = "https://jira.epam.com/jira/issues/?jql=project%20%3D%20PLEX-UXC%20and%20issuetype%20%3D%20epic%20and%20assignee%20%3D%20";
+                var endUri = version.name == "" ?"%20and%20fixVersion%20is%20EMPTY" : "%20and%20fixVersion%20%3D%20%22" + version.name + "%22";
+                var veryEndUri = "%20and%20labels%20in%20(Team"+ teamobj.name + ")";
+                card.uri = initUri + name + endUri + veryEndUri;
+                card.progress = card.summarySP > 0 ? Math.floor(card.reportedSP*100/card.summarySP) : 0;
                 var oldStatus = card.readyForQA ? "ReadyForQA" :
                     card.readyForAcceptance ? "Resolved" :
                         card.accepted ? "Accepted" :
@@ -320,6 +340,7 @@ function moduleProgressController($scope, $resource, $window, $filter) {
                 card.readyForAcceptance = status == "Resolved";
                 card.accepted = status == "Accepted";
                 card.cancelled = status == "Cancelled";
+                card.blocked |= item.blocked;
                 found = true;
             }
         }
@@ -330,7 +351,11 @@ function moduleProgressController($scope, $resource, $window, $filter) {
             card.readyForAcceptance = status == "Resolved";
             card.readyForQA = status == "ReadyForQA";
             card.cancelled = status == "Cancelled";
-            smeNames.push(card);
+            card.uri = item.uri;
+            card.dueDateConfirmed = item.dueDateConfirmed;
+            card.progress = card.summarySP ? Math.floor(card.reportedSP*100/card.summarySP) : 0;
+            card.blocked = item.blocked;
+            version.smeNames.push(card);
         }
     }
 
@@ -353,6 +378,9 @@ function moduleProgressController($scope, $resource, $window, $filter) {
             };
             for(var i=0; i<$scope.showVersions.length; i++) {
                 var version = $scope.showVersions[i];
+                if(version == "Undefined") {
+                    version = "";
+                }
                 team.versions.push( {name:version, done: 0, total: 0, smeNames: [], completed: false});
             }
             $scope.teamLoadData.push(team);
@@ -376,7 +404,13 @@ function moduleProgressController($scope, $resource, $window, $filter) {
             return moduleName;
         }
 
-        return moduleName.substring(0,index);
+        var prefix = "";
+        var index2 = moduleName.indexOf("Phase");
+        if(index2 > 0) {
+            prefix = "P" + moduleName.substring(index2+6, index2+8);
+        }
+
+        return prefix + " " + moduleName.substring(0,index);
     }
 
     function processEntity(entity, moduleProgressItem) {
