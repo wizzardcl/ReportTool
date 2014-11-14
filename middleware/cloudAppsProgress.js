@@ -23,23 +23,28 @@ exports.getData = function (req, res) {
 }
 
 function cloudAppData() {
-    this.cloudApps = [
+    this.modules = [
         {
             moduleName: "",
-            appName: "",
-            pageKey: "",
-            pageName: "",
-            storyPoints: 0,
-            team: "",
-            stream: "",
-            taskStatus: "",
-            checklistStatus: "",
-            blockers: [
+            cloudAppRowspans: {},
+            cloudApps: [
                 {
-                    key: "",
-                    uri: "",
-                    status: "",
-                    pagesInvolved: 0
+                    appName: "",
+                    pageKey: "",
+                    pageName: "",
+                    storyPoints: 0,
+                    team: "",
+                    stream: "",
+                    taskStatus: "",
+                    checklistStatus: "",
+                    blockers: [
+                        {
+                            key: "",
+                            uri: "",
+                            status: "",
+                            pagesInvolved: 0
+                        }
+                    ]
                 }
             ]
         }
@@ -48,11 +53,11 @@ function cloudAppData() {
 
 function parsePages(teamToSearch, cloudAppToSearch, callback) {
     var cloudAppsData = new cloudAppData();
-    cloudAppsData.cloudApps = [];
+    cloudAppsData.modules = [];
 
     var query = {};
     if (teamToSearch) {
-        query.labels = new RegExp(teamToSearch);
+        query.labels = new RegExp(teamToSearch.indexOf("Team") == 0 ? teamToSearch : "Team" + teamToSearch);
     }
 
     Page.find(query, { worklogHistory: 0, progressHistory: 0 })
@@ -85,7 +90,6 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
 
                             var blockers = [];
                             for (var i = 0, issuesLength = issues.length; i < issuesLength; i++) {
-                                // TODO - do NOT include bugs or other types?
                                 var pageIssue = issues[i];
                                 blockers.push({
                                     key: pageIssue.key,
@@ -112,8 +116,28 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
 }
 
 function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp, team, stream, taskStatus, checklistStatus, blockers) {
+    var module = _.find(cloudAppsData.modules, function (moduleItem) {
+        return moduleItem.moduleName == moduleName;
+    });
+
+    if (_.isUndefined(module)) {
+        module = {
+            moduleName: moduleName,
+            cloudAppRowspans: {},
+            cloudApps: []
+        };
+
+        cloudAppsData.modules.push(module);
+    }
+
+    if (module.cloudAppRowspans[appName] == undefined) {
+        module.cloudAppRowspans[appName] = 1;
+    }
+    else {
+        module.cloudAppRowspans[appName] += 1;
+    }
+
     var appd = {
-        moduleName: moduleName,
         appName: appName,
         pageKey: pageKey,
         pageName: pageName,
@@ -124,5 +148,6 @@ function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp,
         checklistStatus: checklistStatus,
         blockers: blockers
     };
-    cloudAppsData.cloudApps.push(appd);
+
+    module.cloudApps.push(appd);
 }
