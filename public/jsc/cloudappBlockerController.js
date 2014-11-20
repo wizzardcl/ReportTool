@@ -10,13 +10,16 @@ function cloudAppController($scope, $resource, $window, $filter){
     $scope.init = function () {
         //$scope.common = {};
         $scope.isLoading = true;
-        $scope.filteredTeam = 'TeamNova';
-        //$scope.teams = $scope.allTeams(true);
+
+        if(!$scope.filteredTeam)
+        {
+            $scope.filteredTeam = 'TeamNova';
+        }
 
         $scope.dataLoad();
     };
 
-    $scope.predicate = 'moduleName';
+    $scope.predicate = 'appName';
 
     $scope.reInit = function () {
         $scope.isLoading = true;
@@ -54,22 +57,6 @@ function cloudAppController($scope, $resource, $window, $filter){
         $scope.reInit();
     };
 
-    $scope.previousModule = '';
-    $scope.previousModuleSkipped = false;
-
-    $scope.showModule = function(module){
-
-        if(module == $scope.previousModule){
-            $scope.previousModuleSkipped = true;
-            return false;
-        }
-
-        $scope.previousModule = module;
-        $scope.previousModuleSkipped = false;
-
-        return true;
-    };
-
     $scope.previousCloud = '';
     $scope.previousCloudSkipped = false;
 
@@ -84,6 +71,16 @@ function cloudAppController($scope, $resource, $window, $filter){
         $scope.previousCloudSkipped = false;
 
         return true;
+    };
+
+    $scope.getSpan = function(cloudName, rowspans)
+    {
+        return rowspans[cloudName];
+    };
+
+    $scope.color_codes = {};
+    $scope.stringToColorCode = function(str) {
+        return (str in $scope.color_codes) ? $scope.color_codes[str] : ($scope.color_codes[str] = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6));
     };
 
     $scope.init();
