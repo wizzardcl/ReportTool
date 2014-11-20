@@ -30,23 +30,21 @@ function appController($scope, $resource, $window) {
 
     $scope.allTeams = function () {
         var allTeamsArray = [{"id": "All", "name": "All"}];
-
         allTeamsArray.push.apply(allTeamsArray,$scope.TeamDevMembers.teams);
         return allTeamsArray;
     }();
 
-    $scope.teamsOnly = function () {
-        var teamsOnlyArray = [];
-
-        teamsOnlyArray.push.apply(teamsOnlyArray,$scope.TeamDevMembers.teams);
-        return teamsOnlyArray;
-    }();
-
+    $scope.allStreams = [{id: "All", name: "All"}];
     $scope.allSMEs = [{id: "All", name: "All"}];
     $scope.allModuleGroups = [{id: "All", name: "All"}];
+    $scope.allModules = [{id: "All", name: "All"}];
     $scope.allVersions = [{id: "All", name: "All"}];
 
     $scope.statuses = $window.exports.statuses;
+    $scope.STATUS = $window.exports.STATUS;
+    $scope.RESOLUTION = $window.exports.RESOLUTION;
+
+    $scope.getPriorityNumber = $window.exports.getPriorityNumber;
 }
 
 myApp.run(function ($rootScope, $location) {
