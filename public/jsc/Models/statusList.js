@@ -28,13 +28,16 @@ exports.RESOLUTION = {
     OBSOLETE: { name: "Obsolete" }
 };
 
+exports.isAccepted = function(status) {
+   return status == exports.STATUS.ACCEPTED.name || status == exports.STATUS.PRODUCTION.name;
+};
+
 exports.statusEntity = function(status)
 {
     this.name = status.name || "";
     this.isChecked = true;
     this.weight = status.value;
     this.cssIcon = status.icon || "";
-    this.pages = 0;
     this.count = 0;
 };
 
@@ -100,6 +103,23 @@ exports.statuses = function() {
             default :
                 return this.blocked;
         }
+    }
+    this.resetCounters = function(){
+        this.blocked.count = 0;
+        this.open.count = 0;
+        this.reopened.count = 0;
+        this.deferred.count = 0;
+        this.assigned.count = 0;
+        this.inProgress.count = 0;
+        this.codeReview.count = 0;
+        this.readyForQA.count = 0;
+        this.testingInProgress.count = 0;
+        this.resolved.count = 0;
+        this.accepted.count = 0;
+        this.production.count = 0;
+        this.closed.count = 0;
+        this.cancelled.count = 0;
+        this.notApplicable.count = 0;
     }
 };
 

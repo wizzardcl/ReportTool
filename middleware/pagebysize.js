@@ -1,5 +1,4 @@
 var mongoose = require('../libs/mongoose');
-var pagebysizeModel = require('../models/pagebysize').data;
 var Module = require('../models/module').Module;
 var Page = require('../models/page').Page;
 var log = require('../libs/log')(module);
@@ -14,9 +13,42 @@ exports.getData = function (req, res) {
 
 function isDeveloper(name) {
     if (persons.isDeveloper(name)) {
-            return true;
+        return true;
     }
     return false;
+}
+
+function pagebysizeModel() {
+    this.data = [
+        {
+            data: [],
+            name: "XXXLDev"
+        },
+        {
+            data: [],
+            name: "XXLDev"
+        },
+        {
+            data: [],
+            name: "ExtraLargeDev"
+        },
+        {
+            data: [],
+            name: "LargePlusDev"
+        },
+        {
+            data: [],
+            name: "LargeDev"
+        },
+        {
+            data: [],
+            name: "MediumDev"
+        },
+        {
+            data: [],
+            name: "SmallDev"
+        }
+    ];
 }
 
 function parsePages(callback) {
@@ -52,19 +84,12 @@ function parsePages(callback) {
                     timeQASpent += parseFloat(worklog.timeSpent);
                 }
             }
-            if(dateQAFinished > (new Date("Jan 1, 2014")).getTime() &&
-                (timeDevSpent > 1. && (
+            if(dateDevFinished > (new Date("Jan 1, 2014")).getTime() &&
+                (
                 page.status == "Resolved" ||
                 page.status == "Closed"
-                ))) {
-                putDataPoint(model, pageSize+"Dev", dateQAFinished, timeDevSpent, page);
-            }
-            if(dateQAFinished > (new Date("Jan 1, 2014")).getTime() &&
-                (timeQASpent > 1. && (
-                page.status == "Resolved" ||
-                page.status == "Closed"
-                ))) {
-                putDataPoint(model, pageSize+"QA", dateQAFinished, timeQASpent, page);
+                )) {
+                putDataPoint(model, pageSize+"Dev", dateDevFinished, timeDevSpent, page);
             }
         }
 

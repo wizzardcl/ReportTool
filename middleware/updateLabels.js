@@ -1,37 +1,29 @@
-var util = require('util');
 var config = require('../config');
 var log = require('../libs/log')(module);
 var _ = require('underscore');
 var async = require('async');
+var sessionsupport = require('../middleware/sessionsupport');
 
 var JiraApi = require('jira').JiraApi;
-var response = null;
 var updateInProgress = false;
-var issuesList = [];
 
-exports.processItems = function (jqlQuery, labelsToAdd, labelsToDelete, jiraUser, jiraPassword, callback) {
+exports.processItems = function (params, callback) {
     if (updateInProgress) {
         callback();
     }
 
     updateInProgress = true;
 
-    var jira = new JiraApi(config.get("jiraAPIProtocol"), config.get("jiraUrl"), config.get("jiraPort"), jiraUser, jiraPassword, '2');
+    var jira = new JiraApi(config.get("jiraAPIProtocol"), config.get("jiraUrl"), config.get("jiraPort"), params.username, params.password, '2');
 
     async.series([
             //step 1
             function (callback) {
                 //grab all modules
-                writeToClient("**** Step 1: collect issues");
-                Step1CollectIssues(jira, jqlQuery, callback);
+                writeToClient("**** Starting Update");
+                Step1CollectIssues(jira, params, callback);
             },
             //step 2
-            function (callback) {
-                writeToClient("**** Step 2: update issues");
-                //grab pages list
-                Step2UpdateIssues(jira, labelsToAdd, labelsToDelete, callback);
-            },
-            //step 3
             function (callback) {
                 updateInProgress = false;
                 callback();
@@ -50,52 +42,42 @@ exports.processItems = function (jqlQuery, labelsToAdd, labelsToDelete, jiraUser
     callback();
 };
 
-exports.rememberResponse = function (res) {
-    response = res;
+exports.rememberResponse = function (req, res) {
+    sessionsupport.setResponseObj('updateLabels', req, res);
 };
 
 var writeToClient = function (text, error) {
-    if(response && error == null) {
-        response.write("event: logmessage\n");
-        response.write('data: ' + text + '\n\n');
-        log.info(text);
-    }
     if (error) {
         log.error(text);
         log.error(error);
-        if (response) {
-            response.write("event: errmessage\n");
-            var errorText = error == null ? "not evaluated" : error.message == null ? error : error.message;
-            response.write("data: " + text + ", reason - " + errorText + "\n\n");
-        }
+        var errorText = error == null ? "not evaluated" : error.message == null ? error : error.message;
+        sessionsupport.notifySubscribers('updateLabels', "errmessage", text + ", reason - " + errorText);
+    }
+    else {
+        sessionsupport.notifySubscribers('updateLabels', "logmessage", text);
+        log.info(text);
     }
 };
 
-function Step1CollectIssues(jira, jqlQuery, callback) {
+function Step1CollectIssues(jira, params, callback) {
     issuesList = [];
 
-    var loopError = true;
+    var loopError = 3;
     async.whilst(function() {
-            return loopError;
+            return loopError-- > 0;
         },
         function(callback) {
-            jira.searchJira(jqlQuery, { fields: ["summary", "labels"] }, function (error, issues) {
+            jira.searchJira(params.jqlQuery, { fields: ["summary", "labels", "assignee", "priority", "customfield_10002"] }, function (error, issues) {
                 if (error) {
                     callback(error);
                 }
                 if (issues != null) {
                     async.eachSeries(issues.issues, function (issue, callback) {
-                            issuesList.push({key: issue.key, labels: issue.fields.labels});
-                            writeToClient(issue.key + " : " + " Issue Collected");
-                            callback();
+                            ProcessPageFromJira(jira, params, issue, callback);
                         },
                         function (err) {
-                            if (err) {
-                                writeToClient("Collect issues error happened!", err);
-                            }
-                            writeToClient(issuesList.length + " : " + " Issues Collected");
                             if(err == null) {
-                                loopError = false;
+                                loopError = 0;
                             }
                             callback(err);
                         });
@@ -113,59 +95,109 @@ function Step1CollectIssues(jira, jqlQuery, callback) {
         });
 }
 
-function Step2UpdateIssues(jira, labelsToAdd, labelsToDelete, callback) {
-    var addLabels = labelsToAdd.split(',');
-    var delLabels = labelsToDelete.split(',');
+function ProcessPageFromJira(jira, params, issue, callback) {
+    var loopError = 3;
+    var addLabels = params.labelsToAdd != null && params.labelsToAdd != "";
+    var deleteLabels = params.labelsToDelete != null  && params.labelsToDelete != "";
+    var addWatcher = params.watchersToAdd != null  && params.watchersToAdd != "";
+    var deleteWatcher = params.watchersToDelete != null  && params.watchersToDelete != "";
+    var updateAssignee = params.assigneeName != null  && params.assigneeName != "";
+    var updatePriority = params.priorityName != null  && params.priorityName != "";
+    var addEpics = params.epicsToAdd != null  && params.epicsToAdd != "";
+    var deleteEpics = params.epicsToDelete != null  && params.epicsToDelete != "";
 
-    async.eachLimit(issuesList, 1, function (issueData, callback) {
-            ProcessPageFromJira(jira, issueData, addLabels, delLabels, callback);
-        },
-        function (err) {
-            callback();
-        }
-    );
-}
-
-function ProcessPageFromJira(jira, issueData, addLabels, delLabels, callback) {
-    var loopError = true;
     async.whilst(function() {
-            return loopError;
+            return loopError-- > 0;
         },
         function(callback) {
-            var issueUpdate = {fields: {labels: issueData.labels}};
-            for(var i = 0; i < addLabels.length; i++) {
+            var issueUpdate = addLabels || deleteLabels ?
+                {fields: {labels: issue.fields.labels ? issue.fields.labels : []}} :
+                updateAssignee ?
+                {fields: {assignee: { name: params.assigneeName}}} :
+                updatePriority ?
+                {fields: {priority: { name: params.priorityName}}} :
+                addEpics || deleteEpics ?
+                {fields: {customfield_10002: issue.fields.customfield_10002 ? issue.fields.customfield_10002 : []}} :
+                {};
+            if(addLabels) {
                 var exists = false;
                 for(var j=0; j < issueUpdate.fields.labels.length; j++) {
-                    if(addLabels[i] == issueUpdate.fields.labels[j]) {
+                    if(params.labelsToAdd == issueUpdate.fields.labels[j]) {
                         exists = true;
                         break;
                     }
                 }
                 if(!exists) {
-                    issueUpdate.fields.labels.push(addLabels[i]);
+                    issueUpdate.fields.labels.push(params.labelsToAdd);
                 }
             }
-            for(var i = 0; i < delLabels.length; i++) {
+            if(deleteLabels) {
                 for(var j=0; j < issueUpdate.fields.labels.length; j++) {
-                    if(delLabels[i] == issueUpdate.fields.labels[j]) {
+                    if(params.labelsToDelete == issueUpdate.fields.labels[j]) {
                         issueUpdate.fields.labels.splice(j,1);
                         break;
                     }
                 }
             }
-            jira.updateIssue(issueData.key, issueUpdate, function (error) {
-                if (error) {
-                    writeToClient("Update issue error happened!", error);
-                    writeToClient("Restarting Loop for: "+issueData.key, error);
+            if(addEpics) {
+                var exists = false;
+                for(var j=0; j < issueUpdate.fields.customfield_10002.length; j++) {
+                    if(params.epicsToAdd == issueUpdate.fields.customfield_10002[j]) {
+                        exists = true;
+                        break;
+                    }
                 }
-                else {
-                    loopError = false;
+                if(!exists) {
+                    issueUpdate.fields.customfield_10002.push(params.epicsToAdd);
                 }
-                callback();
-            });
+            }
+            if(deleteEpics) {
+                for(var j=0; j < issueUpdate.fields.customfield_10002.length; j++) {
+                    if(params.epicsToDelete == issueUpdate.fields.customfield_10002[j]) {
+                        issueUpdate.fields.customfield_10002.splice(j,1);
+                        break;
+                    }
+                }
+            }
+            if(addLabels || deleteLabels || updateAssignee || updatePriority || addEpics || deleteEpics) {
+                jira.updateIssue(issue.key, issueUpdate, function (error) {
+                    if (error) {
+                        writeToClient("Update issue error happened!", error);
+                        writeToClient("Restarting Loop for: "+labelsData.key, error);
+                    }
+                    else {
+                        loopError = 0;
+                    }
+                    callback();
+                });
+            }
+            if(addWatcher) {
+                jira.addWatcher(issue.key, params.watchersToAdd, function (error) {
+                    if (error) {
+                        writeToClient("Add watchers error happened!", error);
+                        writeToClient("Restarting Loop for: " + issue.key, error);
+                    }
+                    else {
+                        loopError = 0;
+                    }
+                    callback();
+                });
+            }
+            if(deleteWatcher) {
+                jira.deleteWatcher(issue.key, params.watchersToDelete, function (error) {
+                    if (error) {
+                        writeToClient("Delete watchers error happened!", error);
+                        writeToClient("Restarting Loop for: " + issue.key, error);
+                    }
+                    else {
+                        loopError = 0;
+                    }
+                    callback();
+                });
+            }
         },
         function(err) {
-            writeToClient(issueData.key + " : Issue Updated");
+            writeToClient(issue.key + " : Issue Updated");
             callback();
         }
     );

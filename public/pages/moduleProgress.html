@@ -1,39 +1,100 @@
-<div id="container" class="container" ng-controller="moduleProgressController" style="padding-left: 150px">
-    <div class="visible-md visible-lg visible-sm" style="position:fixed; left: 10px; top:80px; font-size: 12pt; max-width: 250px">
-        <ul class="list-unstyled">
-            <li class="red"><input type="checkbox" ng-model="showTeamTable"> Kanban board</li>
-            <li><input type="checkbox" ng-model="showStreams" ng-change="processWithRowSpans()"> Streams</li>
-            <li><input type="checkbox" ng-model="showCards" ng-change="processWithRowSpans()"> Cards</li>
-            <li><input type="checkbox" ng-model="showModules" ng-change="processWithRowSpans()"> SME / Modules</li>
-            <li><br/></li>
-            <li><img width="20" height="20" alt="Conf" src="img/duedate2.png"/> DueDate confirmed</li>
-            <li><img width="20" height="20" alt="Conf" src="img/ban.png"/> Has blockers</li>
-            <li><img width="20" height="20" alt="Conf" src="img/deffered.png"/> Has deferred</li>
-            <li><br/></li>
-            <li>Fix Version:<select class="form-control headerSelectWidth" ng-model="filteredVersion" class="headerSelectWidth" ng-options="version.name as version.name for version in allVersions" ng-change="filterModule()"></select></li>
-            <li>SME:<select class="form-control headerSelectWidth" ng-model="filteredSme" class="headerSelectWidth" ng-options="sme.name as sme.name for sme in allSMEs" ng-change="filterModule()"></select></li>
-            <li>Module Group:<select style="max-width: 250px !important;" class="form-control headerSelectWidth" ng-model="filteredMG" class="headerSelectWidth" ng-options="moduleGroup.name as moduleGroup.name for moduleGroup in allModuleGroups" ng-change="filterModule()"></select></li>
-            <li>Team:<select class="form-control headerSelectWidth" ng-model="filteredTeam" class="headerSelectWidth" ng-options="team.name as team.name for team in allTeams" ng-change="filterModule()"></select></li>
-            <li><br/></li>
-            <li><input type="checkbox" ng-model="total.inProgress.isChecked" ng-change="processWithRowSpans()"><span class="glyphicon glyphicon-play"></span><strong> {{total.inProgress.count}}</strong>:In Progress</li>
-            <li class="readyForQA"><input type="checkbox" ng-model="total.readyForQA.isChecked" ng-change="processWithRowSpans()"> <span class="glyphicon glyphicon-th-list"></span><strong> {{total.readyForQA.count}}</strong>:Testing is in prog</li>
-            <li class="readyForAcceptance"><input type="checkbox" ng-model="total.resolved.isChecked" ng-change="processWithRowSpans()"><span class="glyphicon glyphicon-check"></span><strong> {{total.resolved.count}}</strong>:Resolved</li>
-            <li class="accepted"><input type="checkbox" ng-model="total.accepted.isChecked" ng-change="processWithRowSpans()"><span class="glyphicon glyphicon-star"></span><strong> {{total.accepted.count}}</strong>:Accepted</li>
-            <li class="cancelled"><input type="checkbox" ng-model="total.cancelled.isChecked" ng-change="processWithRowSpans()"><span class="glyphicon glyphicon-ban-circle"></span><strong> {{total.cancelled.count}}</strong>:Out Of Scope</li>
-            <li class="cancelled"><input type="checkbox" ng-model="total.notApplicable.isChecked" ng-change="processWithRowSpans()"><span class="glyphicon glyphicon-ban-circle"></span><strong> {{total.notApplicable.count}}</strong>:Not Applicable</li>
-            <li><br/></li>
-            <li><input type="checkbox" ng-model="total.all.isChecked" ng-change="onSelectDeselectAll()"><span class="glyphicon glyphicon-shopping-cart"></span><strong> {{total.total}}</strong>:Total</li>
-            <li><br/></li>
-            <li><label><span class="glyphicon glyphicon-asterisk"></span><strong>{{total.doneSP | number : 0}}/{{total.summSP | number : 0}}</strong>:SP</label></li>
-        </ul>
-    </div>
-    <div class="row" ng-show="showTeamTable">
+<div ng-controller="moduleProgressController">
+    <section class="sidebar" ng-show="isShowSideBar">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Legend and filters <span class="glyphicon glyphicon-resize-small btn-link pull-right" ng-click="onToggleSideBar()"></span></h3>
+            </div>
+            <ul class="list-unstyled">
+                <li class="list-group-item">
+                    <div>
+                        <img width="16" height="16" alt="Conf" src="img/duedate2.png"/> DueDate confirmed
+                    </div>
+                    <div>
+                        <img width="16" height="16" alt="Conf" src="img/ban.png"/> Has blockers
+                    </div>
+                    <div>
+                        <img width="16" height="16" alt="Conf" src="img/deffered.png"/> Has deferred
+                    </div>
+                    <div>
+                        <img width="16" height="16" alt="Conf" src="img/1.png"/>
+                        <img width="16" height="16" alt="Conf" src="img/2.png"/>
+                        <img width="16" height="16" alt="Conf" src="img/3.png"/>
+                        <img width="16" height="16" alt="Conf" src="img/4.png"/>
+                        <img width="16" height="16" alt="Conf" src="img/5.png"/> Priority
+                    </div>
+                    <div>
+                        Development %
+                        <div class="progress card-progress">
+                            <div class="progress-bar progress-bar-success progress-bar-striped"
+                                 role="progressbar"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 style="width: 90%">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        Checklists creation %
+                        <div class="progress card-progress">
+                            <div class="progress-bar progress-bar-info progress-bar-striped"
+                                 role="progressbar"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 style="width: 50%">
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        Functional testing %
+                        <div class="progress card-progress">
+                            <div class="progress-bar progress-bar-warning progress-bar-striped"
+                                 role="progressbar"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 style="width: 30%">
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="list-group-item list-group-item-info"><div class="checkbox"><label><input type="checkbox" ng-model="showStreams" ng-change="processWithRowSpans(true)"> Streams</label></div></li>
+                <li class="list-group-item list-group-item-info"><div class="checkbox"><label><input type="checkbox" ng-model="showCards" ng-change="processWithRowSpans(true)"> Cards</label></div></li>
+                <li class="list-group-item list-group-item-info"><div class="checkbox"><label><input type="checkbox" ng-model="showModules" ng-change="processWithRowSpans(true)"> SME / Modules</label></div></li>
+                <li class="list-group-item">
+                    <div><select style="width: 150px" ng-model="filteredVersion" ng-options="version.name as version.name for version in allVersions" ng-change="filterModule()"></select>Version</div>
+                    <div><select style="width: 150px" ng-model="filteredSme" ng-options="sme.name as sme.name for sme in allSMEs" ng-change="filterModule()"></select>SME</div>
+                    <div><select style="width: 150px" ng-model="filteredMG" ng-options="moduleGroup.name as moduleGroup.name for moduleGroup in allModuleGroups" ng-change="filterModule()"></select>Group</div>
+                    <div><select style="width: 150px" ng-model="filteredTeam" ng-options="team.name as team.name for team in allTeams" ng-change="filterModule()"></select>Team</div>
+                </li>
+                <li class="list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.inProgress.isChecked" ng-change="processWithRowSpans(true)">In Progress</label><span class="badge pull-right">{{total.inProgress.count}}</span></div></li>
+                <li class="readyForQA list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.readyForQA.isChecked" ng-change="processWithRowSpans(true)">Testing is in prog</label><span class="badge pull-right">{{total.readyForQA.count}}</span></div></li>
+                <li class="readyForAcceptance list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.resolved.isChecked" ng-change="processWithRowSpans(true)">Resolved</label><span class="badge pull-right">{{total.resolved.count}}</span></div></li>
+                <li class="accepted list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.accepted.isChecked" ng-change="processWithRowSpans(true)">Accepted</label><span class="badge pull-right">{{total.accepted.count}}</span></div></li>
+                <li class="cancelled list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.cancelled.isChecked" ng-change="processWithRowSpans(true)">Out Of Scope</label><span class="badge pull-right">{{total.cancelled.count}}</span></div></li>
+                <li class="cancelled list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.notApplicable.isChecked" ng-change="processWithRowSpans(true)">Not Applicable</label><span class="badge pull-right">{{total.notApplicable.count}}</span></div></li>
+                <li class="list-group-item"></li>
+                <li class="list-group-item"><div class="checkbox"><label><input type="checkbox" ng-model="total.all.isChecked" ng-change="onSelectDeselectAll()">Total</label><span class="badge pull-right">{{total.total}}</span></div></li>
+                <li class="list-group-item"></li>
+                <li class="list-group-item"><span class="badge">{{total.doneSP | number : 0}}/{{total.summSP | number : 0}}</span>SP</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="sideCollapseButton" ng-show="!isShowSideBar">
+        <div><span class="btn-link"> <span class="glyphicon glyphicon-resize-full" ng-click="onToggleSideBar()"></span></span></div>
+    </section>
+
+    <section ng-class="{contentShowSidebar: isShowSideBar, contentHideSidebar: !isShowSideBar}">
         <table class="table table-bordered">
-            <thead class="progressTableMainHeader">
+            <thead class="bg-info">
             <tr>
                 <th>Teams</th>
-                <th ng-repeat="version in showVersions">{{version}}</th>
+                <th style="min-width: 150px" ng-repeat="version in showVersions">{{version}}</th>
             </tr>
+            </thead>
+            <tbody>
                 <tr ng-repeat = "team in teamLoadData">
                     <div ng-repeat="version in showVersions">
                     <td class="bg-success">
@@ -41,24 +102,55 @@
                     </td>
                     <td ng-repeat="version in team.versions">
                         <div class="disp-block">
-                            <sup style="color: blue">{{version.done | number : 0}}/</sup>
-                            <sup style="color: darkred">{{version.total | number : 0}}</sup>
-                            <span style="font-style: italic">{{version.restSP | number : 0}}</span>
+                            <sup class="disp-block" style="color: blue">{{version.done | number : 0}}/</sup>
+                            <sup class="disp-block" style="color: darkred">{{version.total | number : 0}}</sup>
+                            <h3 class="disp-block" style="font-style: italic">{{version.restSP | number : 0}}</h3>
                         </div>
-                        <table class="table table-condensed" ng-if="showCards">
-                            <tr ng-repeat = "card in version.smeNames">
-                                <td ng-class="{accepted: card.accepted,
-                                    readyForAcceptance: card.readyForAcceptance,
-                                    readyForQA: card.readyForQA,
-                                    cancelled: card.cancelled,
-                                    'bg-info': true}">
-                                    <div id="card_progress">
-                                        <div class="bar" ng-style="{width: card.progress + '%'}"></div>
-                                    </div>
+                        <table class="table table-condensed cards-table" ng-if="showCards">
+                            <tr ng-repeat = "card in version.cards">
+                                <td ng-class="{
+                                    blocked: card.status == 'Blocked',
+                                    accepted: card.status == 'Accepted',
+                                    readyForAcceptance: card.status == 'Resolved',
+                                    readyForQA: card.status == 'Ready for QA' || card.status == 'Testing in Progress',
+                                    cancelled: card.status == 'Canceled',
+                                    production: card.status == 'Production',
+                                    'bg-info': true}" style="max-width: 150px; min-width: 150px; word-break: break-all">
                                     <div class="disp-block">
-                                        <sup style="color: blue">{{card.reportedSP | number : 0}}/</sup>
-                                        <sup style="color: darkred">{{card.summarySP | number : 0}}</sup>
-                                        <span style="font-style: italic">{{card.restSP | number : 0}}</span>
+                                        <div class="progress card-progress disp-block" style="min-width: 43px">
+                                            <div class="progress-bar progress-bar-success progress-bar-striped"
+                                                 role="progressbar"
+                                                 aria-valuenow="0"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                                 style="width: 0%" ng-style="{width: card.progress + '%'}">
+                                            </div>
+                                        </div>
+                                        <div class="progress card-progress disp-block" style="min-width: 43px">
+                                            <div class="progress-bar progress-bar-info progress-bar-striped"
+                                                 role="progressbar"
+                                                 aria-valuenow="0"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                                 style="width: 0%" ng-style="{width: card.checklistsProgress + '%'}">
+                                            </div>
+                                        </div>
+                                        <div class="progress card-progress disp-block" style="min-width: 43px">
+                                            <div class="progress-bar progress-bar-warning progress-bar-striped"
+                                                 role="progressbar"
+                                                 aria-valuenow="0"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100"
+                                                 style="width: 0%" ng-style="{width: card.testingProgress + '%'}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="disp-block" style="align-self: flex-end">
+                                            <sup class="disp-block" style="color: blue">{{card.reportedSP | number : 0}}/</sup>
+                                            <sup class="disp-block" style="color: darkred">{{card.summarySP | number : 0}}</sup>
+                                            <h3 class="disp-block" style="font-style: italic">{{card.restSP | number : 0}}</h3>
+                                        </div>
                                         <br/>
                                         <img ng-show="card.priority == 1" width="16" height="16" alt="Conf" src="img/1.png"/>
                                         <img ng-show="card.priority == 2" width="16" height="16" alt="Conf" src="img/2.png"/>
@@ -66,84 +158,19 @@
                                         <img ng-show="card.priority == 4" width="16" height="16" alt="Conf" src="img/4.png"/>
                                         <img ng-show="card.priority == 5" width="16" height="16" alt="Conf" src="img/5.png"/>
                                         <img ng-show="card.dueDateConfirmed" width="16" height="16" alt="Conf" src="img/duedate2.png"/>
-                                        <img ng-show="card.blocked" width="16" height="16" alt="Conf" src="img/ban.png"/>
-                                        <img ng-show="card.deferred" width="16" height="16" alt="Conf" src="img/deffered.png"/>
+                                        <img ng-show="card.hasblockers" width="16" height="16" alt="Conf" src="img/ban.png"/>
+                                        <img ng-show="card.hasdeferred" width="16" height="16" alt="Conf" src="img/deffered.png"/>
+                                        <br/>
+                                        <span style="font-style: italic">{{card.cloudAppsCount | number : 0}} CloudApps</span>
                                     </div>
-                                    <a class="disp-block" href="{{card.uri}}">{{card.name}}</a>
+                                    <a href="{{card.uri}}">{{card.name}}</a>
                                 </td>
                             </tr>
                         </table>
                     </td>
                     </div>
                 </tr>
+            </tbody>
         </table>
-    </div>
-    <div class="row">
-
-        <div class="col-lg-12">
-            <table class="table table-bordered">
-                <thead class="progressTableMainHeader">
-                <tr>
-                    <th class="sorted_column" ng-click="onSortingClick('progress')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> Progress
-                        <span ng-show="sortingModel.selected == 'progress'">&nbsp;
-                            <span ng-show="sortingModel.isASC">▴</span>
-                            <span ng-show="!sortingModel.isASC">▾</span>
-                        </span>
-                    </th>
-                    <th class="sorted_column" ng-click="onSortingClick('dueDate')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> Due Date
-                        <span ng-show="sortingModel.selected == 'dueDate'">&nbsp;
-                            <span ng-show="sortingModel.isASC">▴</span>
-                            <span ng-show="!sortingModel.isASC">▾</span>
-                        </span></th>
-                    <th class="sorted_column" ng-click="onSortingClick('smeName')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> SME
-                        <span ng-show="sortingModel.selected == 'smeName'">&nbsp;
-                            <span ng-show="sortingModel.isASC">▴</span>
-                            <span ng-show="!sortingModel.isASC">▾</span>
-                        </span></th>
-                    <th class="sorted_column" ng-click="onSortingClick('moduleGroup')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> Link
-                        <span ng-show="sortingModel.selected == 'moduleGroup'">&nbsp;
-                            <span ng-show="sortingModel.isASC">▴</span>
-                            <span ng-show="!sortingModel.isASC">▾</span>
-                        </span></th>
-                    <th>Teams</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat = "module in updatedModuleProgressData">
-                    <td>
-                        <div id="page_progress"><span class="bar" ng-style="{width: module.progress2}"></span></div>
-                        <div>{{module.progress2}}</div>
-                        <div>{{module.reportedSP | number : 0}}/{{module.summarySP | number : 0}} SP</div>
-                    </td>
-                    <td>
-                        <div>{{module.duedate2 | date:'MMM-dd-yyyy'}}</div>
-                        <img ng-show="module.dueDateConfirmed" width="40" height="40" alt="Conf" src="img/duedate2.png"/>
-                    </td>
-                    <td>
-                        <table>
-                            <div>{{module.smename}}</div>
-                        </table>
-                    </td>
-                    <td ng-class="{red: isUnknownExist(module.name),
-                                    accepted: module.accepted,
-                                    readyForAcceptance: module.readyForAcceptance,
-                                    readyForQA: module.readyForQA,
-                                    cancelled: module.cancelled}">
-                        <a href="{{module.uri}}">{{module.name}}</a>
-                        <div>Group: {{module.moduleGroup}}</div>
-                    </td>
-                    <td>
-                        <table>
-                            <tr ng-repeat = "team in module.teamnames">
-                                <td class="table_cell_border">
-                                    <div>{{team}}</div>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </section>
 </div>

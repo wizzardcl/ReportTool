@@ -6,12 +6,15 @@ var config = require('../config');
 var log = require('../libs/log')(module);
 var Module = require('../models/module').Module;
 var Page = require('../models/page').Page;
+var Version = require('../models/Version').Version;
 var Issue = require('../models/issue').Issue;
 var _ = require('underscore');
 var async = require('async');
+var sessionsupport = require('../middleware/sessionsupport');
+
+var VERSION = require('../public/jsc/versions').VERSION;
 
 var JiraApi = require('jira').JiraApi;
-var response = null;
 
 var epicsList = [];
 var issuesList = [];
@@ -19,37 +22,28 @@ var epicIssueMap = {};
 var linkedIssueUniqList = [];
 var updateInProgress = false;
 
-exports.rememberResponse = function (res) {
-    response = res;
+exports.rememberResponse = function (req, res) {
+    sessionsupport.setResponseObj('updateDb', req, res);
     UpdateProgress(0, "page");
     UpdateProgress(0, "issues");
 };
 
 var UpdateProgress = function (progress, type) {
-    if(response != null) {
-        response.write("event: progress\n");
-        response.write('data: {"' + type + '":' + progress.toString() + '}\n\n');
-    }
+    sessionsupport.notifySubscribers('updateDb', "progress", '{"' + type + '":' + progress.toString() + "}");
     if (progress > 0) {
         LogProgress("**********" + type + " Progress " + progress.toString() + "% **********");
     }
 };
 
 var LogProgress = function (text, error) {
-    if (response && error == null) {
-        response.write("event: logmessage\n");
-        response.write("data: " + text + "\n\n");
-    }
     if (error) {
+        var errorText = error == null ? "not evaluated" : error.message == null ? error : error.message;
+        sessionsupport.notifySubscribers('updateDb', "errmessage", text + ", reason - " + errorText);
         log.error(text);
         log.error(error);
-        if (response) {
-            response.write("event: errmessage\n");
-            var errorText = error == null ? "not evaluated" : error.message == null ? error : error.message;
-            response.write("data: " + text + ", reason - " + errorText + "\n\n");
-        }
     }
     else {
+        sessionsupport.notifySubscribers('updateDb', "logmessage", text);
         log.info(text);
     }
 };
@@ -99,6 +93,10 @@ exports.updateJiraInfo = function (full, jiraUser, jiraPassword, callback) {
         },
         //step 6
         function (callback) {
+            WriteVersion(callback);
+        },
+        //step 7
+        function (callback) {
             LogProgress("**** Update Finished ****");
             callback();
         }
@@ -115,6 +113,24 @@ exports.updateJiraInfo = function (full, jiraUser, jiraPassword, callback) {
     );
     callback();
 };
+
+function WriteVersion(callback) {
+    Version.findOne({ numerical: VERSION.NUMBER }, function (err, version) {
+        if (err) {
+            callback(err);
+        }
+
+        if (!version) {
+            version = new Version();
+            version.numerical = VERSION.NUMBER;
+            version.name = VERSION.NAME;
+        }
+        version.updated = new Date(Date.now());
+        version.save(function (err, page) {
+            callback(err, page);
+        });
+    });
+}
 
 function Step1CollectModules(jira, callback) {
     var requestString = "project = PLEX-UXC AND issuetype = epic AND summary ~ Module AND NOT summary ~ automation AND NOT summary ~ screens ORDER BY key ASC";
@@ -433,10 +449,8 @@ function SavePage(jira, issue, callback) {
         page.epicKey = epicIssueMap[issue.key];
         page.created = issue.fields.created;
         page.updated = issue.fields.updated;
-        if (issue.fields.customfield_24300) {
-            page.checklistStatus = issue.fields.customfield_24300.value;
-        }
-
+        page.testingProgress = issue.fields.customfield_24700;
+        page.checklistCreated = issue.fields.customfield_24300 ? issue.fields.customfield_24300[0].value == 'yes' ? true : false : false;
         parseHistory(issue, page);
         calcWorklogFromIssue(issue, page);
         var queryString = util.format("project = PLEXUXC AND parent in (%s)", issue.key);

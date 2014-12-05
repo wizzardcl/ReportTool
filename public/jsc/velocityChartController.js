@@ -64,7 +64,7 @@ function velocityChartController($scope, $resource, $window) {
                     if(this.point.tooltip == "") {
                         return (new Date(this.x)).toDateString() + ":" + this.y;
                     }
-                    var modules = this.point.tooltip.split(",");
+                    var modules = this.point.tooltip ? this.point.tooltip.split(",") : [];
                     var result = "";
                     for(var i=0; i<modules.length; i++) {
                         result += modules[i] + '<br/>';
@@ -107,14 +107,6 @@ function velocityChartController($scope, $resource, $window) {
     };
 
     /* ----------------------------------------- Helpers/Angular Filters and etc-----------------------------------*/
-    $scope.jiraLabelsTeams = [
-        {"id": "TeamNova", "title": "TeamNova"},
-        {"id": "TeamRenaissance", "title": "TeamRenaissance"},
-        {"id": "TeamInspiration", "title": "TeamInspiration"},
-        {"id": "TeamLiberty", "title": "TeamLiberty"},
-        {"id": "TeamViva", "title": "TeamViva"}
-    ];
-
     $scope.init();
 }
 

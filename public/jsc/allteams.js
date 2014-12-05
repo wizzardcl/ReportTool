@@ -1,8 +1,9 @@
 function Teams() {
     this.teams = [
         {
-            id: "TeamRenaissance",
+            id: "Renaissance",
             name: "Renaissance",
+            streams: ["StreamR1", "StreamR2", "StreamR3"],
             teamLead: "Aliaksandr Koush",
             qaTeamLead: "Aliaksandra Kutynka",
             developers: [
@@ -34,8 +35,9 @@ function Teams() {
             ]
         },
         {
-            id: "TeamInspiration",
+            id: "Inspiration",
             name: "Inspiration",
+            streams: ["StreamIn1", "StreamIn2", "StreamIn3"],
             teamLead: "Sergey Tischenko",
             qaTeamLead: "Denys Pugachov",
             developers: [
@@ -50,22 +52,26 @@ function Teams() {
                 "Vladyslav Pilhui",
                 "Oleksandr Zhyltsov",
                 "Oleksii Suriadnyi",
-                "Roman Golovchenko",
                 "Serhiy Haponenko",
-                "Yevhenii Lomov"
+                "Yevhenii Lomov",
+                "Ihor Rudchenko",
+                "Andrii Savinov",
+                "Dmytro Petlia",
+                "Olena Ostroverkhova"
             ],
             testers: [
                 "Mila Botnar",
                 "Yuri Timchenko",
                 "Anastasia Kotenyova",
                 "Pavlo Golovashchenko",
-                "Svitlana Peleshenko",
+                "Oleksii Milman",
                 "Denys Pugachov"
             ]
         },
         {
-            id: "TeamNova",
+            id: "Nova",
             name: "Nova",
+            streams: ["StreamN1", "StreamN2", "StreamN3"],
             teamLead: "Heorhi Vilkitski",
             qaTeamLead: "Valiantsina Krautsevich",
             developers: [
@@ -96,8 +102,9 @@ function Teams() {
             ]
         },
         {
-            id: "TeamLiberty",
+            id: "Liberty",
             name: "Liberty",
+            streams: ["StreamL1", "StreamL2", "StreamL3"],
             teamLead: "Dzmitry Tabolich",
             qaTeamLead: "Iryna Kutsko",
             developers: [
@@ -116,7 +123,6 @@ function Teams() {
                 "Vitali Podobed",
                 "Hleb Krotsik",
                 "Uladzimir Vysotski"
-
             ],
             testers: [
                 "Anna Novikova",
@@ -129,13 +135,13 @@ function Teams() {
             ]
         },
         {
-            id: "TeamViva",
+            id: "Viva",
             name: "Viva",
+            streams: ["StreamV1", "StreamV2", "StreamV3"],
             teamLead: "Valentine Zhuck",
             qaTeamLead: "Katsiaryna Kuchko",
             developers: [
                 "Valentine Zhuck",
-                "Maryna Furman",
                 "Siarhei Zhalezka",
                 "Viachaslau Anufryiuk",
                 "Yury Yamoryk",
@@ -150,7 +156,9 @@ function Teams() {
                 "Siarhei Bahdanovich",
                 "Andrei Lysenka",
                 "Aleh Dukel",
-                "Ivan Yanchuk"
+                "Ivan Yanchuk",
+                "Kanstantsin Ldou",
+                "Katsiaryna Zeliankova"
             ],
             testers: [
                 "Iryna Koush",
@@ -159,6 +167,23 @@ function Teams() {
                 "Liudmila Barshcheuskaya",
                 "Iryna Razorionova",
                 "Katsiaryna Kuchko"
+            ]
+        },
+        {
+            id: "Elfish",
+            name: "Elfish",
+            teamLead: "Roman Golovchenko",
+            qaTeamLead: "",
+            developers: [
+                "Roman Golovchenko",
+                "Allaberdi Hojayev",
+                "Bohdan Sorokin",
+                "Yevhenii Koliesnik"
+            ],
+            testers: [
+                "Ivan Nalyvaiko",
+                "Oleksii Shchelkunov",
+                "Valeriia Karabut"
             ]
         },
         {
@@ -192,6 +217,8 @@ exports.OldDevelopers = function oldDevelopers(name) {
         name == "Aliaksei Labachou" ||
         name == "Mariya Babich" ||
         name == "Katsiaryna Sasina" ||
+        name == "aliaksei_labachou aliaksei_labachou" ||
+        name == "Maryna Furman" ||
         name == undefined) {
         return true;
     }

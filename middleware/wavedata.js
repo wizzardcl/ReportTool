@@ -61,9 +61,25 @@ function parsePages(callback) {
                 b = b.name;
                 return a > b ? 1 : a < b ? -1 : 0;
             });
+            updateChecklistsProgress(cloudappdata);
             callback(cloudappdata);
         }
     ]);
+}
+
+function updateChecklistsProgress(cloudappdata) {
+    for(var i=0; i<cloudappdata.cloudApp.length; i++) {
+        var item = cloudappdata.cloudApp[i];
+        var created = 0;
+        var total = 0;
+        for(var j=0; j<item.checklistsProgress.length; j++) {
+            if(item.checklistsProgress[j] == true) {
+                created++;
+            }
+            total++;
+        }
+        cloudappdata.cloudApp[i].checklistsProgress = created*100 / total;
+    }
 }
 
 function putDataPoint(cloudAppData, module, page) {
@@ -91,6 +107,7 @@ function putDataPoint(cloudAppData, module, page) {
     var priority = module.priority;
     var dueDateConfirmed = helpers.getDueDateConfirmed(labels);
 
+    var timeSpent = helpers.getTimeSpent(page);
 
     var storyPoints = page.storyPoints == null ? 0 : parseFloat(page.storyPoints);
     var progress = page.progress == null ? 0 : parseInt(page.progress);
@@ -112,9 +129,24 @@ function putDataPoint(cloudAppData, module, page) {
             cloudApp.summarySP += storyPoints;
             cloudApp.progress = cloudApp.reportedSP*100/cloudApp.summarySP;
             cloudApp.pages++;
+            cloudApp.devTimeSpent += timeSpent.devTimeSpent;
+            cloudApp.qaTimeSpent += timeSpent.qaTimeSpent;
+            cloudApp.checklistsProgress.push(page.checklistCreated);
             if(isParentPage) {
                 cloudApp.teamName = teamName;
                 cloudApp.streamName = streamName;
+                cloudApp.testingProgress = page.testingProgress;
+            }
+
+            var found = false;
+            for(var j=0; j<cloudApp.assignees.length; j++) {
+                if(cloudApp.assignees[j] == page.assignee) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                cloudApp.assignees.push(page.assignee);
             }
 
             var cloudAppStatus = statusList.getStatusByName(cloudApp.status);
@@ -144,7 +176,12 @@ function putDataPoint(cloudAppData, module, page) {
             priority: priority,
             pages: 1,
             dueDateConfirmed: dueDateConfirmed,
-            uri: fullUri
+            uri: fullUri,
+            devTimeSpent: timeSpent.devTimeSpent,
+            qaTimeSpent: timeSpent.qaTimeSpent,
+            assignees: [smeName, page.assignee],
+            testingProgress: isParentPage ? page.testingProgress : 0,
+            checklistsProgress: [page.checklistCreated]
         };
         cloudAppData.cloudApp.push(cloudApp);
     }

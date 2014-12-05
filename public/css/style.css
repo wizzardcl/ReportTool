@@ -1,5 +1,4 @@
 body {
-    padding: 50px;
     font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -8,7 +7,7 @@ a {
 }
 
 table {
-    max-width: 2000px !important;
+    max-width: 4000px !important;
 }
  /*------------------------------------Common---------------------------*/
 .progress_no_top_line > td {
@@ -69,6 +68,11 @@ table {
  padding: 0 !important;
 }
 
+.list-group-item .checkbox{
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .table-timesheet-hover > tbody > tr:hover > td,
 .table-timesheet-hover > tbody > tr:hover > th {
     background-color: #d9edf7;
@@ -92,41 +96,13 @@ table {
     border-top: 1px solid #e5e5e5;
 }
 
-#page_progress,
-#issue_progress
+.card-progress
 {
-    width: 218px;
-    background: #666;
-    color: #FF0000;
-    border: 1px solid #ccc;
-    height: 28px;
-}
-
-#page_progress .bar,
-#issue_progress .bar
-{
-    display: inline-block;
-    background: #3d3;
-    width: 0;
-    height: 28px;
-}
-
-#card_progress
-{
-    border: solid #cccccc 2px;
-    border-radius: 5px;
+    border: solid #cccccc 1px;
+    border-radius: 1px;
     /* Dimensions */
     height: 10px;
-    background: #FF0000;
-    margin-bottom: 0px !important;
-}
-
-#card_progress .bar
-{
-    display: block;
-    background: #3d3;
-    width: 0;
-    height: 6px;
+    margin-b: 0px !important;
 }
 
 .help-icon
@@ -192,41 +168,39 @@ table {
     font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-table {
+.table_cell_border{
+    border-color: #0028c1 !important;
+    border-width: 1px !important;
+}
+
+.cards-table {
     border-collapse: separate;
     border-spacing: 0 5px;
 }
 
-thead th {
-    background-color: #73c0ff;
-    color: white;
-    height: 35px;
+.disp-block {
+    display: inline-block;
+    margin: 0px;
 }
 
-tfoot td {
-    font-weight: bold;
-    background-color: #73c0ff ;
-    color: white;
-    height: 35px;
-    text-align: left;
-    border-bottom: 2px solid #ddd;
-    padding-top: 8px !important;
+section.sidebar{
+    float: left;
+    width: 250px;
+}
+section.sideCollapseButton{
+    float: left;
+    font-size: 30px;
+    border: 1px solid #ddd;
+    width: 37px;
+    margin-left: 1px;
+    background-color: #d9edf7
 }
 
-tr {
-    height: 35px;
+section.contentShowSidebar {
+    padding-left: 250px;
 }
-
-tr td:first-child,
-tr th:first-child {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-}
-
-tr td:last-child,
-tr th:last-child {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
+section.contentHideSidebar {
+    padding-left: 38px;
 }
 
 .table_cell_border{

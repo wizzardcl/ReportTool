@@ -14,11 +14,13 @@ function IssuesLinkedToManyPagesController($scope, $resource, $window, $filter, 
 
         $scope.nowDate = new Date();
         $scope.nowDate.setHours(12,0,0);
+        $scope.isHidePostAcceptance = true;
 
-        $scope.TeamFilter = "TeamNova"
+        //$scope.TeamFilter = "TeamNova"
     };
 
     $scope.reInit = function () {
+        $scope.IssuesLinkedToManyPagesList = [];
         $scope.prepareData();
     };
 
@@ -30,11 +32,19 @@ function IssuesLinkedToManyPagesController($scope, $resource, $window, $filter, 
 
             item.teamsInvolved = linkedPagesResult.teamsInvolved;
             item.blockersCount = linkedPagesResult.blockersCount;
+            item.dueDate = linkedPagesResult.dueDate;
+
+
+            // filter for Post-acceptance bugs
+            if($scope.isHidePostAcceptance && _.some(item.labels, function(labelItem){return labelItem === "Post-acceptance"})) {
+                return;
+            }
 
             // filter issues where more than 0 blockers
             if($scope.getBlockersCount(item) > 0) {
                 $scope.IssuesLinkedToManyPagesList.push(item);
             }
+
         }, true);
 
         // Sorting issues based on blockersCount
@@ -55,6 +65,17 @@ function IssuesLinkedToManyPagesController($scope, $resource, $window, $filter, 
             // Blockers count calculating
             if(linkedPageItem.linkType.indexOf("blocked") > -1){
                 result.blockersCount++;
+            }
+
+            var _dueDate = new Date(linkedPageItem.page.dueDate);
+            if(!isNaN(_dueDate.getTime())){
+                if(result.dueDate){
+                    result.dueDate = result.dueDate.getTime() < _dueDate.getTime() ? result.dueDate : _dueDate;
+                }else
+                {
+                    result.dueDate = _dueDate;
+                }
+
             }
 
             // Teams involved in Issue aggregating
@@ -127,8 +148,9 @@ function IssuesLinkedToManyPagesController($scope, $resource, $window, $filter, 
             return true;
         }
 
+        var shortTeamName = $scope.common.filteredTeam.replace("Team","");
         return _.some(item.teamsInvolved, function(team){
-            return team == $scope.common.filteredTeam;
+            return team == shortTeamName;
         });
     };
 
@@ -149,6 +171,10 @@ function IssuesLinkedToManyPagesController($scope, $resource, $window, $filter, 
 
         assignee:{
             getter: function(item){return item.assignee;}
+        },
+
+        dueDate:{
+            getter: function(item){return item.dueDate ? item.dueDate.getTime() : 0;}
         }
     };
 

@@ -2,11 +2,20 @@
     <div class="panel panel-default">
         <!-- Default panel contents -->
         <div class="panel-heading"><span class="glyphicon glyphicon-th-list"></span> Issues by blocked pages
+            <label class="pull-right">
+                <input ng-model="isHidePostAcceptance" ng-change="reInit()" type="checkbox"> Hide post-acceptance
+            </label>
         </div>
         <div class="panel-body" style="height: 500px; overflow: auto">
             <table class="table">
                 <tr>
                     <th></th>
+                    <th class="sorted_column" ng-click="onSortingClick('dueDate')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> Due Date
+                        <span ng-show="sortingModel.selected == 'dueDate'">&nbsp;
+                            <span ng-show="sortingModel.isASC">▴</span>
+                            <span ng-show="!sortingModel.isASC">▾</span>
+                        </span>
+                    </th>
                     <th>Key</th>
                     <th>Type</th>
                     <th class="sorted_column" ng-click="onSortingClick('blockers')"><span class="glyphicon glyphicon-sort" style="font-size: 8pt"></span> Blocks
@@ -35,6 +44,8 @@
                         <span ng-if="issue.isHotIssue" class="glyphicon glyphicon-warning-sign" tooltip="HotIssue"></span>
                         <span ng-if="issue.isF5Issue" class="glyphicon glyphicon-wrench" tooltip="F5 Issue"></span>
                     </td>
+                    <td> {{issue.dueDate | date:'MMM-dd-yyyy'}} </span>
+                    </td>
                     <td><a href={{"https://jira.epam.com/jira/browse/"+issue.key}}>{{issue.key}}</a></td>
                     <td ng-switch="issue.type">
                         <span ng-switch-when='Issue' tooltip="Issue"><span class="glyphicon glyphicon-info-sign"></span></span>
@@ -45,7 +56,7 @@
                         </td>
                     <td>{{issue.blockersCount}}</td>
                     <td><span tooltip="{{status.name}}"><span class="{{status.cssIcon}}"></span></span></td>
-                    <td><span ng-repeat="team in issue.teamsInvolved"> {{team}}; </span></td>
+                    <td><span ng-repeat="team in issue.teamsInvolved track by $index"> {{team}} </span></td>
                     <td>{{issue.assignee}}</td>
                     <td>{{issue.lastDaysAgo}}</td>
                 </tr>
