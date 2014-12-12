@@ -8,7 +8,12 @@ function cloudAppController($scope, $resource, $window, $filter){
     /* ------------------------------------------------------ Init/Reinit -------------------------------*/
 
     $scope.init = function () {
-        //$scope.common = {};
+        // just quick stub for testing
+        $scope.isEnabled = false;
+        $scope.$watch('common.filteredTeam', function(newValue, oldValue) {
+            $scope.isEnabled = !$scope.isEnabled;
+        });
+
         $scope.isLoading = true;
 
         if(!$scope.filteredTeam)
@@ -46,7 +51,7 @@ function cloudAppController($scope, $resource, $window, $filter){
             loadingDfrd.reject(err);
         };
 
-        cloudAppDataResource.get({team: $scope.filteredTeam, cloudApp: $scope.cloudAppInput},getTimeSheetSuccess, getTimeSheetFail);
+        cloudAppDataResource.get({team: "Nova", cloudApp: $scope.cloudAppInput},getTimeSheetSuccess, getTimeSheetFail);
         return loadingDfrd.promise();
     };
 
@@ -84,4 +89,9 @@ function cloudAppController($scope, $resource, $window, $filter){
     };
 
     $scope.init();
+
+    // Edgar please place this to the correct places =)
+    $scope.onModalShow = function(){
+        $('#cloudAppModal').modal({show:true});
+    };
 }
