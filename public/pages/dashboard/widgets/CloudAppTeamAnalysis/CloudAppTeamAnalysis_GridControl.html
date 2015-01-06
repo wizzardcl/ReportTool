@@ -1,57 +1,49 @@
 <div ng-repeat="module in cloudAddData.modules">
 
-    <div class="row">
-        <table class="table">
-            <thead>
-            <tr>
-                <th>
-                    <span>{{module.moduleName}}</span>
-                </th>
-            </tr>
-            <tr>
-                <th>
-                    <span tooltip-placement="top">CloudApp</span>
+    <div ng-repeat="cloudApp in module.cloudApps | filter:search:strict | orderBy:['appName']:reverse">
+        <div class="row">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <span>{{module.moduleName}} / {{cloudApp.appName}}</span>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <span tooltip-placement="top">Page</span>
 
-                </th>
-                <th>
-                    <span tooltip-placement="top">Page</span>
-
-                </th>
-                <th>StoryPoints</th>
-                <th>Stream</th>
-                <th>TaskStatus</th>
-                <th>Blockers</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-repeat="cloudApp in module.cloudApps | filter:search:strict | orderBy:['appName','pageName']:reverse">
-                <!--
-                <td class="table_cell_border" ng-if="showCloud(cloudApp.appName)">{{cloudApp.appName}}</td>
-                <td class="" ng-if="previousCloudSkipped"></td> rowspan="{{module.}}" -->
-                <td class="table_cell_border" style="vertical-align: middle;"
-                    rowspan="{{getSpan(cloudApp.appName, module.cloudAppRowspans)}}"
-                    ng-if="showCloud(cloudApp.appName)">{{cloudApp.appName}}
-                </td>
-                <td class="table_cell_border">{{cloudApp.pageName}}</td>
-                <td class="table_cell_border">{{cloudApp.storyPoints}}</td>
-                <td class="table_cell_border">{{cloudApp.stream}}</td>
-                <td class="table_cell_border">{{cloudApp.taskStatus}}</td>
-                <td class="table_cell_border">
-                        <span ng-repeat="blocker in cloudApp.blockers">
-                            <a ng-if="blocker.status!='Closed'" class="btn btn-primary blocker_style"
-                               ng-style={'background-color':stringToColorCode(blocker.key)}
-                               href="{{blocker.uri}}" target="_blank">
-                                {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>
-                            </a>
-                            <a ng-if="blocker.status=='Closed'"
-                               class="btn btn-primary blocker_style blocker_status_{{blocker.status}}"
-                               href="{{blocker.uri}}" target="_blank">
-                                {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>
-                            </a>
-                        </span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                        </th>
+                        <th>SP</th>
+                        <th>Str</th>
+                        <th>TaskStatus</th>
+                        <th>Blockers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="pageItem in cloudApp.pages">
+                        <td class="table_cell_border">{{pageItem.pageName}}</td>
+                        <td class="table_cell_border">{{pageItem.storyPoints}}</td>
+                        <td class="table_cell_border">{{pageItem.stream}}</td>
+                        <td class="table_cell_border">{{pageItem.taskStatus}}</td>
+                        <td class="table_cell_border">
+                            <span ng-repeat="blocker in pageItem.blockers">
+                                <a ng-if="blocker.status!='Closed'" class="btn btn-primary blocker_style"
+                                   ng-style={'background-color':stringToColorCode(blocker.key)}
+                                   href="{{blocker.uri}}" target="_blank">
+                                    {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>
+                                </a>
+                                <a ng-if="blocker.status=='Closed'"
+                                   class="btn btn-primary blocker_style blocker_status_{{blocker.status}}"
+                                   href="{{blocker.uri}}" target="_blank">
+                                    {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>
+                                </a>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>

@@ -26,23 +26,26 @@ function cloudAppData() {
     this.modules = [
         {
             moduleName: "",
-            cloudAppRowspans: {},
             cloudApps: [
                 {
                     appName: "",
-                    pageKey: "",
-                    pageName: "",
-                    storyPoints: 0,
-                    team: "",
-                    stream: "",
-                    taskStatus: "",
-                    checklistStatus: "",
-                    blockers: [
+                    pages: [
                         {
-                            key: "",
-                            uri: "",
-                            status: "",
-                            pagesInvolved: 0
+                            pageKey: "",
+                            pageName: "",
+                            storyPoints: 0,
+                            team: "",
+                            stream: "",
+                            taskStatus: "",
+                            checklistStatus: "",
+                            blockers: [
+                                {
+                                    key: "",
+                                    uri: "",
+                                    status: "",
+                                    pagesInvolved: 0
+                                }
+                            ]
                         }
                     ]
                 }
@@ -81,7 +84,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
                             var moduleName = jiraTextUtility.getModuleName(page.labels);
                             var cloudAppName = jiraTextUtility.getCloudAppName(page.labels);
                             var pageKey = page.key;
-                            var pageName = page.summary;
+                            var shortPageName = page.summary.split("\\").pop();
                             var storyPoints = page.storyPoints;
                             var team = jiraTextUtility.getTeamName(page.labels);
                             var streamName = jiraTextUtility.getStreamName(page.labels);
@@ -101,7 +104,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
                                 })
                             }
 
-                            putDataPoint(cloudAppsData, moduleName, cloudAppName, pageKey, pageName, storyPoints, team, streamName, pageStatus, checklistStatus, blockers);
+                            putDataPoint(cloudAppsData, moduleName, cloudAppName, pageKey, shortPageName, storyPoints, team, streamName, pageStatus, checklistStatus, blockers);
 
                             callback();
                         })
@@ -123,22 +126,26 @@ function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp,
     if (_.isUndefined(module)) {
         module = {
             moduleName: moduleName,
-            cloudAppRowspans: {},
             cloudApps: []
         };
 
         cloudAppsData.modules.push(module);
     }
 
-    if (module.cloudAppRowspans[appName] == undefined) {
-        module.cloudAppRowspans[appName] = 1;
-    }
-    else {
-        module.cloudAppRowspans[appName] += 1;
+    var cloudApp = _.find(module.cloudApps, function (cloudAppItem) {
+        return cloudAppItem.appName == appName;
+    });
+
+    if (_.isUndefined(cloudApp)) {
+        cloudApp = {
+            appName: appName,
+            pages: []
+        };
+
+        module.cloudApps.push(cloudApp);
     }
 
-    var appd = {
-        appName: appName,
+    var pageItem = {
         pageKey: pageKey,
         pageName: pageName,
         storyPoints: sp,
@@ -149,5 +156,5 @@ function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp,
         blockers: blockers
     };
 
-    module.cloudApps.push(appd);
+    cloudApp.pages.push(pageItem);
 }
