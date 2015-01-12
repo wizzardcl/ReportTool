@@ -100,6 +100,10 @@ function putDataPoint(moduledata, module, page, count) {
         moduleGroup = helpers.getModuleGroupName(page.labels);
         progress = page.progress == null ? 0. : parseInt(page.progress);
         calcStoryPoints = storyPoints * progress / 100.;
+        var teamNameP = helpers.getTeamName(page.labels);
+        if(teamNameP != "" && teamNameP != "--") {
+            teamName = teamNameP;
+        }
     }
     else {
         storyPoints = 0.;
@@ -112,7 +116,7 @@ function putDataPoint(moduledata, module, page, count) {
     //module
     var moduled;
     for (var k = 0; k < moduledata.module.length; k++) {
-        if (moduledata.module[k].key == module.key) {
+        if (moduledata.module[k].key == module.key && moduledata.module[k].teamName == teamName) {
             moduled = moduledata.module[k];
             break;
         }
@@ -134,6 +138,7 @@ function putDataPoint(moduledata, module, page, count) {
             progress: 0.,
             reportedSP: 0.,
             summarySP: 0.,
+            xxl: false,
             teamName: teamName,
             streamName: streamName,
             testingProgress: isParentPage && page.testingProgress ? parseFloat(page.testingProgress) : 0.,
@@ -150,6 +155,9 @@ function putDataPoint(moduledata, module, page, count) {
 
     moduled.reportedSP += calcStoryPoints;
     moduled.summarySP += storyPoints;
+    if(storyPoints > 30) {
+        moduled.xxl = true;
+    }
     moduled.progress = moduled.summarySP > 0. ? moduled.reportedSP*100/moduled.summarySP : 0.;
     moduled.pagescount = count;
 
