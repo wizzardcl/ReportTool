@@ -10,6 +10,7 @@ function dashboardController($scope, $resource, $window, $filter, $modal,  $sce,
     $scope.init = function () {
         $scope.common = {};
         $scope.common.filteredTeam = $scope.allTeams[0].id;
+        $scope.common.filteredStream = $scope.allStreams[0].id;
         $scope.isLoading = true;
 
         $scope.dataLoad();

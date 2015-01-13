@@ -10,6 +10,7 @@ function cloudAppController($scope, $resource, $window, $filter){
     $scope.init = function () {
         // just quick stub for testing
         $scope.isEnabled = false;
+        $scope.statuses = new $scope.statuses();
         $scope.$watch('common.filteredTeam', function(newValue, oldValue) {
             $scope.isEnabled = !$scope.isEnabled;
         });
@@ -51,7 +52,8 @@ function cloudAppController($scope, $resource, $window, $filter){
             loadingDfrd.reject(err);
         };
 
-        cloudAppDataResource.get({team: "Nova", cloudApp: $scope.cloudAppInput},getTimeSheetSuccess, getTimeSheetFail);
+        cloudAppDataResource.get({team: "Nova", cloudApp: "Checklists"//$scope.cloudAppInput
+        },getTimeSheetSuccess, getTimeSheetFail);
         return loadingDfrd.promise();
     };
 
@@ -94,4 +96,24 @@ function cloudAppController($scope, $resource, $window, $filter){
     $scope.onModalShow = function(){
         $('#cloudAppModal').modal({show:true});
     };
+
+    angular.module('ng').filter('allipsis', function () {
+        return function (value, wordwise, max, tail) {
+            if (!value) return '';
+
+            max = parseInt(max, 10);
+            if (!max) return value;
+            if (value.length <= max) return value;
+
+            value = value.substr(0, max);
+            if (wordwise) {
+                var lastspace = value.lastIndexOf(' ');
+                if (lastspace != -1) {
+                    value = value.substr(0, lastspace);
+                }
+            }
+
+            return value + (tail || ' …');
+        };
+    });
 }

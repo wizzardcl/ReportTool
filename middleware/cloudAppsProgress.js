@@ -89,7 +89,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
                             var team = jiraTextUtility.getTeamName(page.labels);
                             var streamName = jiraTextUtility.getStreamName(page.labels);
                             var pageStatus = page.status;
-                            var checklistStatus = page.checklistStatus;
+                            var checklistStatus = page.checklistCreated;
 
                             var blockers = [];
                             for (var i = 0, issuesLength = issues.length; i < issuesLength; i++) {

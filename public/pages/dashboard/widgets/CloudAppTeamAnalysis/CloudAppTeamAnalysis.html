@@ -11,7 +11,7 @@
             <ng-include ng-if="isEnabled"
                         src="'pages/dashboard/widgets/CloudAppTeamAnalysis/CloudAppTeamAnalysis_GridControl.html'"></ng-include>
             <div ng-if="!isEnabled">
-                <h1>Please Select your Team<h1>
+                <h1>Please Select your Team</h1>
             </div>
         </div>
     </div>
@@ -26,16 +26,21 @@
                 </div>
                 <div class="modal-body container">
 
-                    <div class="col-lg-2">
-                        <label for="teamDD">Team:</label>
-                        <select id="teamDD" class="form-control headerSelectWidth" ng-model="filteredTeam"
-                                ng-change="onTeamChange()" ng-options="team.id as team.name for team in teamsOnly"></select>
+                    <div class="col-md-3">
+                        <label for="teamSearch">Team:</label>
+                        <select id="teamSearch" class="form-control headerSelectWidth" ng-model="common.filteredTeam" ng-change="onTeamChange()"
+                                ng-options="team.id as team.name for team in allTeams"></select>
                     </div>
-                    <!--<div class="col-lg-2">
+                    <div class="col-md-3">
+                        <label for="streamSearch">Stream:</label>
+                        <select id="streamSearch" class="form-control headerSelectWidth" ng-model="common.filteredStream"
+                                ng-options="stream.id as stream.name for stream in allStreams"></select>
+                    </div>
+                    <div class="col-md-3">
                         <label for="moduleSearch">Module:</label>
                         <input id="moduleSearch" class="form-control headerSelectWidth"  ng-model="search.moduleName"/>
-                    </div>-->
-                    <div class="col-lg-2">
+                    </div>
+                    <div class="col-md-3">
                         <label for="cloudAppSearch">CloudApp:</label>
                         <input id="cloudAppSearch" class="form-control headerSelectWidth"  ng-model="search.appName"/>
                     </div>
