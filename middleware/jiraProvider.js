@@ -10,10 +10,12 @@ var Version = require('../models/Version').Version;
 var Issue = require('../models/issue').Issue;
 var _ = require('underscore');
 var async = require('async');
+var cache = require('node_cache');
 var sessionsupport = require('../middleware/sessionsupport');
 var helpers = require('../middleware/helpers');
 
 var VERSION = require('../public/jsc/versions').VERSION;
+var STATUS = require('../public/jsc/models/statusList').STATUS;
 
 var JiraApi = require('jira').JiraApi;
 
@@ -67,11 +69,17 @@ exports.updateJiraInfo = function (full, jiraUser, jiraPassword, callback) {
             LogProgress("**** Step 1: collect modules");
             Step1CollectModules(jira, callback);
         },
-        //step 2
+        //step 2-1
         function (callback) {
-            LogProgress("**** Step 2: collect pages");
+            LogProgress("**** Step 2-1: collect pages");
             //grab pages list
             Step2CollectPages(jira, full, callback);
+        },
+        //step 2-2
+        function (callback) {
+            LogProgress("**** Step 2-2: collect automation stories");
+            //grab automation pages list
+            Step2CollectAutomationStories(jira, full, callback);
         },
         //step 3
         function (callback) {
@@ -99,6 +107,7 @@ exports.updateJiraInfo = function (full, jiraUser, jiraPassword, callback) {
         //step 7
         function (callback) {
             LogProgress("**** Update Finished ****");
+            cache.clearAllData();
             callback();
         }
     ],
@@ -223,6 +232,55 @@ function Step2CollectPages(jira, full, callback) {
         },
         function (err) {
             callback(err);
+        }
+    );
+}
+
+function Step2CollectAutomationStories(jira, full, callback) {
+    var queryString = "project = PLEXUXC AND issuetype = Story AND ((labels in (Automation) AND status not in (Open)) OR ('Epic Link' = 'Automation test data fixing'))";
+
+    if(!full) {
+        queryString += " AND updated > -3d";
+    }
+
+    var loopError = true;
+    async.whilst(function() {
+            return loopError;
+        },
+        function(callback) {
+            LogProgress("**** collect automation stories");
+            jira.searchJira(queryString, { fields: ["summary"] }, function (error, stories) {
+                if (error) {
+                    LogProgress("Collect automation stories error happened!", error);
+                    LogProgress("Restarting Loop", error);
+                    callback();
+                }
+                if (stories != null) {
+                    async.eachSeries(stories.issues, function (story, callback) {
+                            issuesList.push(story.key);
+                            //epicIssueMap[story.key] = moduleKey;
+                            callback();
+                        },
+                        function (err) {
+                            if (err) {
+                                LogProgress("Restarting Loop for: "+story.key, err);
+                            }
+                            else {
+                                loopError = false;
+                            }
+                            callback();
+                        }
+                    );
+                }
+                else {
+                    loopError = false;
+                    callback();
+                }
+            });
+        },
+        function(err) {
+            LogProgress("Automation Stories Collected");
+            callback();
         }
     );
 }
@@ -496,8 +554,8 @@ function SavePage(jira, issue, callback) {
                             }
                             calcWorklogFromIssue(subtask, page);
                             if(subtask.fields.summary.indexOf("PLEX-Acceptance") > -1) {
-                                if(subtask.fields.status.name == "Closed") {
-                                    page.status = "Production";
+                                if(subtask.fields.status.name == STATUS.CLOSED.name) {
+                                    page.status = STATUS.PRODUCTION.name;
                                 }
                                 page.acceptanceStatus = subtask.fields.status.name;
                             }
@@ -571,11 +629,11 @@ function ParseFinishDates(item, page, created) {
         var from = item.fromString;
         var to = item.toString;
 
-        if (from == "In Progress" && to == "Ready for QA" && page.devFinished == null ||
-            from == "Code Review" && to == "Ready for QA" && page.devFinished == null) {
+        if (from == STATUS.INPROGRESS.name && to == STATUS.READYFORQA.name && page.devFinished == null ||
+            from == STATUS.CODEREVIEW.name && to == STATUS.READYFORQA.name && page.devFinished == null) {
             page.devFinished = created;
         }
-        if (from == "Testing in Progress" && to == "Resolved") {
+        if (from == STATUS.TESTINGINPROGRESS.name && to == STATUS.RESOLVED.name) {
             page.qaFinished = created;
         }
     }
@@ -595,7 +653,7 @@ function parseHistory(issue, page) {
 
 function calcWorklogFromIssue(issue, page) {
     if (issue.fields.worklog) {
-        for (var i = 0; i < issue.fields.worklog.total; i++) {
+        for (var i = 0; i < issue.fields.worklog.worklogs.length; i++) {
             var worklog = issue.fields.worklog.worklogs[i];
             var author = worklog.author.displayName;
             var timeSpent = worklog.timeSpentSeconds / 3600;

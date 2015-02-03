@@ -6,20 +6,20 @@ var Issue = require('../models/issue').Issue;
 var jiraTextUtility = require("./Utility/JiraTextUtility");
 var _ = require('underscore');
 var async = require('async');
+var cache = require('node_cache');
 
 exports.getData = function (req, res) {
-    var teamName = req.query.team;
-    var cloudAppName = req.query.cloudApp;
+    var teamName = _.isEmpty(req.query.team) ? undefined : req.query.team;
+    var cloudAppName = _.isEmpty(req.query.cloudApp) ? undefined : req.query.cloudApp;
 
     //var teamName = req.params.team;
     //var cloudAppName = req.params.cloudApp;
-
-    parsePages(teamName, cloudAppName, function (err, cloudAppData) {
-        if (err) {
-            throw err;
-        }
-        res.json(cloudAppData);
-    })
+    cache.getData("pagebysizeData_" + teamName,function(setterCallback){
+        parsePages(teamName, cloudAppName, function (err, data) {
+            if (err) throw err;
+            setterCallback(data);
+        });
+    }, function(value){res.json(value);});
 }
 
 function cloudAppData() {
@@ -29,9 +29,12 @@ function cloudAppData() {
             cloudApps: [
                 {
                     appName: "",
+                    stream: "",
                     pages: [
                         {
-                            pageKey: "",
+                            assignee: "",
+                            readyPercent: "",
+                            progress: "",
                             pageName: "",
                             storyPoints: 0,
                             team: "",
@@ -83,7 +86,9 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
 
                             var moduleName = jiraTextUtility.getModuleName(page.labels);
                             var cloudAppName = jiraTextUtility.getCloudAppName(page.labels);
+                            var assignee = page.assignee;
                             var pageKey = page.key;
+                            var progress = page.progress;
                             var shortPageName = page.summary.split("\\").pop();
                             var storyPoints = page.storyPoints;
                             var team = jiraTextUtility.getTeamName(page.labels);
@@ -104,7 +109,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
                                 })
                             }
 
-                            putDataPoint(cloudAppsData, moduleName, cloudAppName, pageKey, shortPageName, storyPoints, team, streamName, pageStatus, checklistStatus, blockers);
+                            putDataPoint(cloudAppsData, moduleName, cloudAppName, pageKey, assignee, progress, shortPageName, storyPoints, team, streamName, pageStatus, checklistStatus, blockers);
 
                             callback();
                         })
@@ -118,7 +123,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
         })
 }
 
-function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp, team, stream, taskStatus, checklistStatus, blockers) {
+function putDataPoint(cloudAppsData, moduleName, appName, pageKey, assignee, progress, pageName, sp, team, stream, taskStatus, checklistStatus, blockers) {
     var module = _.find(cloudAppsData.modules, function (moduleItem) {
         return moduleItem.moduleName == moduleName;
     });
@@ -139,6 +144,7 @@ function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp,
     if (_.isUndefined(cloudApp)) {
         cloudApp = {
             appName: appName,
+            stream: stream,
             pages: []
         };
 
@@ -146,7 +152,9 @@ function putDataPoint(cloudAppsData, moduleName, appName, pageKey, pageName, sp,
     }
 
     var pageItem = {
+        assignee: assignee,
         pageKey: pageKey,
+        progress: progress,
         pageName: pageName,
         storyPoints: sp,
         team: team,

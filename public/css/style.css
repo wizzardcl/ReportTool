@@ -98,11 +98,9 @@ table {
 
 .card-progress
 {
-    border: solid #cccccc 1px;
-    border-radius: 1px;
-    /* Dimensions */
-    height: 10px;
-    margin-b: 0px !important;
+    height: 5px;
+    width: 130px;
+    margin: 5px !important;
 }
 
 .help-icon
@@ -232,28 +230,112 @@ section.contentHideSidebar {
 .current-week {
     background-color: #d5e4cc;
 }
-.table_cell_border{
-    border-color: #0028c1 !important;
-    border-width: 1px !important;
+
+.card-full {
+    position: relative;
+    min-height: 100px;
+    width: 150px;
+    margin-bottom: 15px;
 }
 
-/* to be deleted*/
-.blocker_style_old
-{
-    -moz-user-select: none;
-    background-clip: padding-box;
-    background-color: #e4e4e4;
-    /*background-image: linear-gradient(to top, #f4f4f4 20%, #f0f0f0 50%, #e8e8e8 52%, #eee 100%);*/
-    border: 1px solid #aaaaaa;
-    border-radius: 3px;
-    box-shadow: 0 0 2px #fff inset, 0 1px 0 rgba(0, 0, 0, 0.05);
-    color: black;
-    line-height: 13px;
-    margin: 3px 0 3px 5px;
-    padding: 3px 5px 3px 5px;
-    position: relative;
-    display: inline-block;
+.card-high {
+    min-height: 350px !important;
 }
+
+.card-module {
+    min-height: 150px !important;
+}
+
+.card-background-hover {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    min-height: 100px;
+    width: 150px;
+    border-radius: 5px;
+    box-shadow: 3px 3px 5px #888888;
+}
+
+.card-content {
+    position: absolute;
+    left: 5px;
+    top: 0px;
+    z-index: 99;
+}
+
+.cards-column {
+    list-style-type: none;
+    padding: 0;
+}
+
+.card-size {
+    background-color: rgb(118, 162, 250);
+    color: rgb(255, 255, 255);
+    border: 2px solid #eff;
+    min-width: 16px;
+    text-align: center;
+    float: left;
+}
+
+.card-pages {
+    background-color: rgb(10, 176, 108);
+    color: rgb(250, 255, 255);
+    border: 2px solid #fdffff;
+    min-width: 16px;
+    text-align: center;
+    float: left;
+}
+
+.card-left {
+    text-align: center;
+    font-style: italic;
+    font-size: xx-large;
+    position: absolute;
+    bottom: 10px;
+    right: 16px;
+}
+
+.card-icon {
+    float: right;
+    height: 20px;
+    width: 20px;
+    margin: 2px;
+}
+
+.card-icons {
+    position: absolute;
+    z-index: 99;
+    bottom: -10px;
+    margin-right: -16px;
+    width: 150px;
+    height: 25px;
+    float: right;
+}
+
+.card-link {
+    word-wrap: break-word;
+    max-width: 135px;
+    display: block;
+}
+
+.total-size {
+    background-color: rgb(118, 162, 250);
+    color: rgb(255, 255, 255);
+    border: 2px solid #6078ff;
+    text-align: center;
+    padding: 2px;
+}
+
+.total-comments {
+    color: rgb(164, 164, 164);
+}
+
+.total-left {
+    font-style: italic;
+    font-size: x-large;
+}
+}
+
 .blocker_style {
     padding: 3px 5px 3px 5px;
     margin: 3px 0 3px 0;

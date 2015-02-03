@@ -8,19 +8,18 @@ function cloudAppController($scope, $resource, $window, $filter){
     /* ------------------------------------------------------ Init/Reinit -------------------------------*/
 
     $scope.init = function () {
-        // just quick stub for testing
+        $scope.common = {
+            allStreams: [{id: "All", name: "All"}]
+        };
         $scope.isEnabled = false;
         $scope.statuses = new $scope.statuses();
-        $scope.$watch('common.filteredTeam', function(newValue, oldValue) {
-            $scope.isEnabled = !$scope.isEnabled;
-        });
+        $scope.previousCloud = '';
+        $scope.previousCloudSkipped = false;
+        $scope.color_codes = {};
+        $scope.common.filteredTeam = $scope.allTeams[1].id;
+        $scope.common.filteredStream =  $scope.common.allStreams[0].id;
 
         $scope.isLoading = true;
-
-        if(!$scope.filteredTeam)
-        {
-            $scope.filteredTeam = 'TeamNova';
-        }
 
         $scope.dataLoad();
     };
@@ -44,6 +43,7 @@ function cloudAppController($scope, $resource, $window, $filter){
         var getTimeSheetSuccess = function (data) {
             $scope.cloudAddData = data;
             $scope.isLoading = false;
+            $scope.isEnabled = true;
             loadingDfrd.resolve();
         };
 
@@ -52,8 +52,10 @@ function cloudAppController($scope, $resource, $window, $filter){
             loadingDfrd.reject(err);
         };
 
-        cloudAppDataResource.get({team: "Nova", cloudApp: "Checklists"//$scope.cloudAppInput
-        },getTimeSheetSuccess, getTimeSheetFail);
+            cloudAppDataResource.get(
+                {team: $scope.common.filteredTeam == "All" ? undefined : $scope.common.filteredTeam, cloudApp: _.isEmpty($scope.cloudAppInput) ? undefined : $scope.cloudAppInput }, getTimeSheetSuccess, getTimeSheetFail
+            );
+
         return loadingDfrd.promise();
     };
 
@@ -61,11 +63,9 @@ function cloudAppController($scope, $resource, $window, $filter){
 
     $scope.onTeamChange = function()
     {
+        $scope.onFilterChange();
         $scope.reInit();
     };
-
-    $scope.previousCloud = '';
-    $scope.previousCloudSkipped = false;
 
     $scope.showCloud = function(cloud){
 
@@ -85,12 +85,29 @@ function cloudAppController($scope, $resource, $window, $filter){
         return rowspans[cloudName];
     };
 
-    $scope.color_codes = {};
     $scope.stringToColorCode = function(str) {
         return (str in $scope.color_codes) ? $scope.color_codes[str] : ($scope.color_codes[str] = '#'+ ('000000' + (Math.random()*0xFFFFFF<<0).toString(16)).slice(-6));
     };
 
-    $scope.init();
+
+    $scope.onFilterChange = function(){
+        $scope.common.allStreams = [{id: "All", name: "All"}];
+
+        if($scope.common.filteredTeam == "All")
+        {
+            return;
+        }
+
+        $scope.allStreams.forEach(function(item){
+            if(item.dependencyTeamId == $scope.common.filteredTeam){
+                $scope.common.allStreams.push(item);
+            }
+        });
+    };
+
+    $scope.onFilterCloudApps = function(item){
+        return $scope.common.filteredStream == "All" ? true : item.stream == $scope.common.filteredStream
+    };
 
     // Edgar please place this to the correct places =)
     $scope.onModalShow = function(){
@@ -116,4 +133,6 @@ function cloudAppController($scope, $resource, $window, $filter){
             return value + (tail || ' …');
         };
     });
+
+    $scope.init();
 }
