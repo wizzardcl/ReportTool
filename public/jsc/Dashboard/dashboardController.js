@@ -12,6 +12,7 @@ function dashboardController($scope, $resource, $window, $filter, $modal,  $sce,
         $scope.common.filteredTeam = $scope.allTeams[1].id;
         $scope.common.filteredStream = $scope.allStreams[0].id;
         $scope.loadStorageFromLocalDb();
+        $scope.onFilterChange();
         $scope.isLoading = true;
 
         $scope.dataLoad();
@@ -49,24 +50,27 @@ function dashboardController($scope, $resource, $window, $filter, $modal,  $sce,
 
 
     /* ------------------------------------------- DOM/Angular events --------------------------------------*/
-//    $scope.onDateChange = function()
-//    {
-//        $scope.reInit();
-//    }
-//
-//    $scope.onCellClick = function(item) {
-//
-//        var modalInstance = $modal.open({
-//            templateUrl: '/pages/modal/timeSheetPageModal.html',
-//            controller: timeSheetPageModalController,
-//            size: "sm",
-//            resolve: {
-//                item: function () {
-//                    return item;
-//                }
-//            }
-//        });
-//    }
+    $scope.onFilterChange = function(){
+        $scope.common.allStreams = [{id: "All", name: "All"}];
+
+        if($scope.common.filteredTeam == "All"){ return; }
+
+        var currentStreamItem = {}
+        $scope.allStreams.forEach(function(item){
+            if(item.dependencyTeamId == $scope.common.filteredTeam){
+                $scope.common.allStreams.push(item);
+            }
+            if($scope.common.filteredStream == item.id){
+                currentStreamItem = item
+            }
+        });
+
+        if($scope.common.filteredStream != "All"){
+            if(currentStreamItem.dependencyTeamId != $scope.common.filteredTeam) {
+                $scope.common.filteredStream = $scope.common.allStreams[1].id;
+            }
+        }
+    };
 
     /* ----------------------------------------- Helpers/Angular Filters and etc-----------------------------------*/
 

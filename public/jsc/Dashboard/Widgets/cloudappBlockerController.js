@@ -96,20 +96,7 @@ function cloudAppController($scope, $resource, $window, $filter){
     };
 
 
-    $scope.onFilterChange = function(){
-        $scope.common.allStreams = [{id: "All", name: "All"}];
 
-        if($scope.common.filteredTeam == "All")
-        {
-            return;
-        }
-
-        $scope.allStreams.forEach(function(item){
-            if(item.dependencyTeamId == $scope.common.filteredTeam){
-                $scope.common.allStreams.push(item);
-            }
-        });
-    };
 
     $scope.onFilterCloudApps = function(item){
         return $scope.common.filteredStream == "All" ? true : item.stream == $scope.common.filteredStream
