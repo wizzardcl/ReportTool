@@ -1,6 +1,6 @@
-<div ng-repeat="module in cloudAddData.modules">
+<div ng-repeat="module in cloudAddData.modules | filter:searchModule:strict">
 
-    <div ng-repeat="cloudApp in module.cloudApps | filter:onFilterCloudApps">
+    <div ng-repeat="cloudApp in module.cloudApps | filter:onFilterCloudApps | filter:searchCloudApp:strict">
         <div class="row">
             <table class="table">
                 <thead>
@@ -46,7 +46,7 @@
                                    href="{{blocker.uri}}" target="_blank">
                                     {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>
                                 </a>
-                                <a ng-if="blocker.status=='Closed'"
+                                <a ng-if="blocker.status=='Closed' && isShowClosedBlockers"
                                    class="btn btn-primary blocker_style blocker_status_{{blocker.status}}"
                                    href="{{blocker.uri}}" target="_blank">
                                     {{blocker.key}} <span class="badge">{{blocker.pagesInvolved}}</span>

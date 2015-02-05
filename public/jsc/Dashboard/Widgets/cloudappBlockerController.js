@@ -8,16 +8,22 @@ function cloudAppController($scope, $resource, $window, $filter){
     /* ------------------------------------------------------ Init/Reinit -------------------------------*/
 
     $scope.init = function () {
-        $scope.common = {
-            allStreams: [{id: "All", name: "All"}]
-        };
+//        $scope.common = {
+//            allStreams: [{id: "All", name: "All"}]
+//        };
         $scope.isEnabled = false;
         $scope.statuses = new $scope.statuses();
         $scope.previousCloud = '';
         $scope.previousCloudSkipped = false;
         $scope.color_codes = {};
-        $scope.common.filteredTeam = $scope.allTeams[1].id;
-        $scope.common.filteredStream =  $scope.common.allStreams[0].id;
+        $scope.isShowClosedBlockers = false;
+
+        $scope.$watch('common.filteredTeam', function(newValue, oldValue) {
+            if(!_.isUndefined($scope.cloudAddData)){
+                $scope.reInit();
+            }
+        });
+
 
         $scope.isLoading = true;
 
@@ -109,9 +115,23 @@ function cloudAppController($scope, $resource, $window, $filter){
         return $scope.common.filteredStream == "All" ? true : item.stream == $scope.common.filteredStream
     };
 
+    $scope.getBlockerCount = function(blockers){
+        var result = 0;
+        for(var i=0; i<blockers.length; i++){
+            if(blockers[i].status != 'Closed')
+                result++;
+        }
+
+        return result || "";
+    }
+
     // Edgar please place this to the correct places =)
     $scope.onModalShow = function(){
         $('#cloudAppModal').modal({show:true});
+    };
+
+    $scope.onExpand = function(){
+
     };
 
     angular.module('ng').filter('allipsis', function () {

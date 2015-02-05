@@ -4,6 +4,7 @@
 var Page = require("../models/page").Page;
 var Issue = require('../models/issue').Issue;
 var jiraTextUtility = require("./Utility/JiraTextUtility");
+var STATUS = require('../public/jsc/models/statusList').STATUS;
 var _ = require('underscore');
 var async = require('async');
 var cache = require('node_cache');
@@ -86,7 +87,7 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
 
                             var moduleName = jiraTextUtility.getModuleName(page.labels);
                             var cloudAppName = jiraTextUtility.getCloudAppName(page.labels);
-                            var assignee = page.assignee;
+                            var assignee = getShortName(page.assignee);
                             var pageKey = page.key;
                             var progress = page.progress;
                             var shortPageName = page.summary.split("\\").pop();
@@ -117,10 +118,51 @@ function parsePages(teamToSearch, cloudAppToSearch, callback) {
 
                 },
                 function (err) {
-                    callback(err, cloudAppsData);
+
+                    var time = process.hrtime();
+                    var filteredResult = {modules:[]};
+
+
+                    _.each(cloudAppsData.modules, function(moduleItem){
+                        var module = undefined;
+
+                        _.each(moduleItem.cloudApps,function(cloudItem){
+
+                            if(cloudItem.appName == "PartOperation"){
+                                console.log(cloudItem.appName);
+                            }
+
+                            var count = _.filter(cloudItem.pages,function(pageItem){
+                                return pageItem.taskStatus == STATUS.CLOSED.name;}
+                            ).length;
+
+                                if(count != cloudItem.pages.length) {
+                                if(!module){
+                                    module = {moduleName: moduleItem.moduleName, cloudApps: []};
+                                    filteredResult.modules.push(module);
+                                }
+                                module.cloudApps.push(cloudItem)
+                            }
+                        })
+                    });
+
+                    var diff = process.hrtime(time);
+                    console.log('benchmark took %d nanoseconds', diff[0] * 1e9 + diff[1]);
+
+
+                    callback(err, filteredResult);
                 }
             );
-        })
+        });
+}
+
+function getShortName(name){
+    if(name) {
+        var del_index = name.indexOf(" ");
+        return name[0] + ". " + name.substring(del_index + 1);
+    }
+
+    return name;
 }
 
 function putDataPoint(cloudAppsData, moduleName, appName, pageKey, assignee, progress, pageName, sp, team, stream, taskStatus, checklistStatus, blockers) {

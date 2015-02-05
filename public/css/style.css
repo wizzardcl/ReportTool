@@ -334,7 +334,7 @@ section.contentHideSidebar {
     font-style: italic;
     font-size: x-large;
 }
-}
+
 
 .blocker_style {
     padding: 3px 5px 3px 5px;
@@ -352,6 +352,14 @@ section.contentHideSidebar {
     text-decoration: line-through;
     background-color: #cccccc;
     color: black;
+}
+
+.blocker_status_table>thead>tr>td,
+.blocker_status_table>thead>tr>th,
+.blocker_status_table>tbody>tr>th,
+.blocker_status_table>tbody>tr>td
+{
+    padding: 0 !important;
 }
 
 .tooltip-inner {
