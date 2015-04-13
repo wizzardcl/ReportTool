@@ -3,6 +3,7 @@ var mongoose = require('../libs/mongoose');
 var Module = require('../models/module').Module;
 var Page = require('../models/page').Page;
 var SizeChange = require('../models/sizeChange').SizeChange;
+var OriginalJiraIssue = require('../models/originalJiraIssue').Issue;
 
 var log = require('../libs/log')(module);
 var async = require('async');
@@ -22,6 +23,12 @@ exports.getData = function (req, res) {
         });
     }, function(value){res.json(value);});
 };
+
+BurnTypeEnum = {
+    All : 0,
+    Core : 1,
+    Automation : 2
+}
 
 
 function distribution (){
@@ -115,6 +122,16 @@ function parsePages(callback) {
             data: [],
             name: "Projected burn core",
             visible: false
+        },
+         {
+             data: [],
+             name: "Automation burn",
+             visible: false
+         },
+        {
+            data: [],
+            name: "Projected Automation burn",
+            visible: false
         }],
         
         distribution: new distribution(),
@@ -123,6 +140,7 @@ function parsePages(callback) {
 
     var maximumBurn = 0.0;
     var maximumBurnCore = 0.0;
+    var maximumAutomationBurn = 0.0;
     async.series([
         function (callback) {
             SizeChange.find({}).exec(function(err, sizeChanges) {
@@ -217,27 +235,95 @@ function parsePages(callback) {
                     });
             });
         },
+                function (callback) {
+                    OriginalJiraIssue.find({"object.fields.priority.name":"Major",issuetype:"Story","object.fields.summary":/^\[Automation\]/, "object.fields.customfield_10004":{$ne:null}, "object.fields.status.name":{$ne:"Deferred"}}).exec(function (err, issues) {
+                        var p1Automation = _.map(issues, function(issue){ return issue.key; });
+
+                        Page.find({automationType: true, storyPoints:{$ne:null}, status:{$ne:"Deferred"}}).exec(function (err, pages) {
+                            if(pages != null && pages.length > 0) {
+                                async.eachSeries(pages, function(page, callback) {
+                                        if(_.contains(p1Automation, page.key) == false) {
+                                            callback();
+                                            return;
+                                        }
+
+                                        var storyPoints = page.storyPoints == null ? 0 : parseFloat(page.storyPoints);
+
+                                        for (var j = 0; j < page.progressHistory.length; j++) {
+                                            var history = page.progressHistory[j];
+                                            var date = new Date(Date.parse(history.dateChanged));
+                                            date.setHours(12, 0, 0, 0);
+                                            date = date.getTime();
+                                            var from = parseInt(history.progressFrom);
+                                            if(from > 1) {
+                                                if(history.progressTo == '0' ||
+                                                    history.progressTo == '1' ||
+                                                    history.progressTo == '' ||
+                                                    history.progressTo == null)
+                                                    continue;
+                                            }
+                                            var to = history.progressTo == null || history.progressTo == '' ? 0 : parseInt(history.progressTo);
+                                            var progress = to - from;
+                                            var calcStoryPoints = storyPoints * progress / 100;
+
+                                            putDataPoint(velocity, "Automation burn", date, calcStoryPoints, "");
+                                        }
+
+                                        maximumAutomationBurn += storyPoints;
+
+                                        callback();
+                                    },
+                                    function(err) {
+                                        callback();
+                                    }
+                                );
+                            }
+                            else {
+                                callback();
+                            }
+                        });
+                     });
+                },
         function () {
             var date = new Date("January 1, 2014 00:00:00");
             date = date.getTime();
             putDataPoint(velocity, "Planned burn", date, 0.0);
             putDataPoint(velocity, "Planned burn core", date, 0.0);
             SortData(velocity);
-            AddProjection(true, maximumBurn, velocity);
-            AddProjection(false, maximumBurnCore, velocity);
-            SumData(true, maximumBurn, velocity);
-            SumData(false, maximumBurnCore, velocity);
-            AdjustProjection(true, velocity);
-            AdjustProjection(false, velocity);
+            AddProjection(BurnTypeEnum.Core, maximumBurn, velocity);
+            AddProjection(BurnTypeEnum.All, maximumBurnCore, velocity);
+            AddProjection(BurnTypeEnum.Automation, maximumAutomationBurn, velocity);
+            SumData(BurnTypeEnum.Core, maximumBurn, velocity);
+            SumData(BurnTypeEnum.All, maximumBurnCore, velocity);
+            SumData(BurnTypeEnum.Automation, maximumAutomationBurn, velocity);
+            AdjustProjection(BurnTypeEnum.Core, velocity);
+            AdjustProjection(BurnTypeEnum.All, velocity);
+            AdjustProjection(BurnTypeEnum.Automation, velocity);
             callback(velocity);
         }
     ]);
 }
 
-function AdjustProjection(isCore, velocity) {
+function AdjustProjection(burnType, velocity) {
     var lastValue = 0.0;
-    var actualName = isCore ? "Actual burn" : "Actual burn core";
-    var projectedName = isCore ? "Projected burn" : "Projected burn core";
+    var actualName;
+    var projectedName;
+
+    switch (burnType)
+    {
+        case BurnTypeEnum.All:
+            actualName = "Actual burn core";
+            projectedName = "Projected burn core";
+            break;
+        case BurnTypeEnum.Core:
+            actualName = "Actual burn";
+            projectedName = "Projected burn";
+            break;
+        case BurnTypeEnum.Automation:
+            actualName = "Automation burn";
+            projectedName = "Projected Automation burn";
+            break;
+    };
 
     for (var k = 0; k < velocity.data.length; k++) {
         var burn = velocity.data[k];
@@ -278,9 +364,26 @@ function AdjustProjection(isCore, velocity) {
     }
 }
 
-function AddProjection(isCore, maximumBurn, velocity) {
-    var actualName = isCore ? "Actual burn" : "Actual burn core";
-    var projectedName = isCore ? "Projected burn" : "Projected burn core";
+function AddProjection(burnType, maximumBurn, velocity) {
+    var actualName;
+    var projectedName;
+
+    switch (burnType)
+    {
+        case BurnTypeEnum.All:
+            actualName = "Actual burn core";
+            projectedName = "Projected burn core";
+            break;
+        case BurnTypeEnum.Core:
+            actualName = "Actual burn";
+            projectedName = "Projected burn";
+            break;
+        case BurnTypeEnum.Automation:
+            actualName = "Automation burn";
+            projectedName = "Projected Automation burn";
+            break;
+    };
+
     var monthAgo = new Date(Date.now());
     monthAgo.setMonth(monthAgo.getMonth()-3);
     var monthAgoMsc = monthAgo.getTime();
@@ -313,8 +416,21 @@ function AddProjection(isCore, maximumBurn, velocity) {
     }
 }
 
-function SumData(isCore, maximumBurn, velocity) {
-    var burnsList = isCore ? ["Planned burn", "Actual burn"] : ["Planned burn core", "Actual burn core"];
+function SumData(burnType, maximumBurn, velocity) {
+    var burnsList;
+    switch (burnType)
+    {
+        case BurnTypeEnum.All:
+            burnsList = ["Planned burn core", "Actual burn core"];
+            break;
+        case BurnTypeEnum.Core:
+            burnsList = ["Planned burn", "Actual burn"];
+            break;
+        case BurnTypeEnum.Automation:
+            burnsList = ["Automation burn"];
+            break;
+    };
+
     for (var k = 0; k < velocity.data.length; k++) {
         var burn = velocity.data[k];
         if(burn.name != burnsList[0] && burn.name != burnsList[1]) {
