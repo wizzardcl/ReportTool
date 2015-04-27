@@ -156,6 +156,7 @@ function Teams() {
                 "Maksim Tsikhan",
                 "Petr Falitarchyk",
                 "Yuri Chupyrkin",
+                "Dzmitry Kharytanovich",
 
                 "Aliaksandr Rykau",
                 "Ivan Dziameshka",
